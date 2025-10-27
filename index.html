@@ -144,19 +144,6 @@
     if(!/[.!?]$/.test(s)) s += '.';
     return s;
   }
-  function uniqItem(genItem, guardSet){
-    // genItem must return a fresh { premise, signature, typeId } each call.
-    for(let i=0;i<512;i++){
-      const it = genItem();
-      const p = it.premise;
-      if(!guardSet.has(p)){ guardSet.add(p); return it }
-    }
-    // Fallback: tag a nonce and return the last attempt
-    const it = genItem();
-    it.premise += ' Again-'+Math.random().toString(36).slice(2,6);
-    guardSet.add(it.premise);
-    return it;
-  }
 
   // ---------- signature helpers ----------
   // A signature codes the reasoning type and a normalized structure mask.
@@ -679,6 +666,30 @@
     timer:null,
   };
 
+  function createUniqueItem(typeId, maskOverride = null){
+    for(let attempt = 0; attempt < 512; attempt++){
+      const obj = G[typeId]();
+      obj.typeId = typeId;
+      if(maskOverride !== null){
+        obj.signature = sig(typeId, maskOverride);
+      }
+      if(!state.guard.has(obj.premise)){
+        state.guard.add(obj.premise);
+        return obj;
+      }
+    }
+
+    // Pathological fallback: force uniqueness while preserving metadata
+    const fallback = G[typeId]();
+    fallback.typeId = typeId;
+    if(maskOverride !== null){
+      fallback.signature = sig(typeId, maskOverride);
+    }
+    fallback.premise += ' Again-' + Math.random().toString(36).slice(2,6);
+    state.guard.add(fallback.premise);
+    return fallback;
+  }
+
   // schedule matches stochastically while respecting n spacing
   function buildSchedule(n,trials,p){
     const s = Array(trials).fill(false);
@@ -691,20 +702,15 @@
   function nextPremise(){
     // choose a type id uniformly at random
     const typeId = choice(TYPE_IDS);
-    const obj = G[typeId]();
-    obj.typeId = typeId;
-    return obj;
+    return createUniqueItem(typeId);
   }
 
   function makeMatchFrom(historyItem){
     // For matching we reuse the same signature mask and regenerate a fresh sentence of the same type.
     // This keeps matching logical, not textual.
     const typeId = historyItem.typeId;
-    let obj = G[typeId]();
-    obj.typeId = typeId;
-    // Force mask to the earlier mask tag, preserving type equality component.
-    obj.signature = sig(typeId, historyItem.signature.split('|')[1]);
-    return obj;
+    const mask = historyItem.signature.split('|')[1];
+    return createUniqueItem(typeId, mask);
   }
 
   function updateKPI(){
@@ -727,13 +733,12 @@
 
       const shouldMatch = state.schedule[state.i];
 
-      // Build one fresh item, ensuring unique premise text across the session.
-      const item = uniqItem(()=>{
-        if(shouldMatch && state.i >= state.n){
-          return makeMatchFrom(state.history[state.i - state.n]); // same type/signature mask, fresh sentence
-        }
-        return nextPremise(); // new random type
-      }, state.guard);
+      let item;
+      if(shouldMatch && state.i >= state.n){
+        item = makeMatchFrom(state.history[state.i - state.n]);
+      } else {
+        item = nextPremise();
+      }
 
       state.history.push(item);
       $('#premise').textContent = 'Premise: ' + item.premise;
