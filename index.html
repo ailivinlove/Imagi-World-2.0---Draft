@@ -144,14 +144,18 @@
     if(!/[.!?]$/.test(s)) s += '.';
     return s;
   }
-  function uniqPremise(gen, guardSet){
-    for(let i=0;i<999;i++){
-      const p = gen();
-      if(!guardSet.has(p)){ guardSet.add(p); return p }
+  function uniqItem(genItem, guardSet){
+    // genItem must return a fresh { premise, signature, typeId } each call.
+    for(let i=0;i<512;i++){
+      const it = genItem();
+      const p = it.premise;
+      if(!guardSet.has(p)){ guardSet.add(p); return it }
     }
-    // in pathological case, append a nonce word
-    const p = gen()+ ' Again-'+Math.random().toString(36).slice(2,6);
-    guardSet.add(p); return p;
+    // Fallback: tag a nonce and return the last attempt
+    const it = genItem();
+    it.premise += ' Again-'+Math.random().toString(36).slice(2,6);
+    guardSet.add(it.premise);
+    return it;
   }
 
   // ---------- signature helpers ----------
@@ -712,37 +716,38 @@
   }
 
   function present(){
-    if(!state.running) return;
-    if(state.i >= state.trials){ stopSession(); return }
+    try{
+      if(!state.running) return;
+      if(state.i >= state.trials){ stopSession(); return }
 
-    let item;
-    const shouldMatch = state.schedule[state.i];
-    if(shouldMatch && state.i >= state.n){
-      item = makeMatchFrom(state.history[state.i - state.n]);
-      logLine(`Scheduled MATCH @${state.i} against ${state.i-state.n} · type ${item.typeId}`);
-    } else {
-      item = nextPremise();
+      const shouldMatch = state.schedule[state.i];
+
+      // Build one fresh item, ensuring unique premise text across the session.
+      const item = uniqItem(()=>{
+        if(shouldMatch && state.i >= state.n){
+          return makeMatchFrom(state.history[state.i - state.n]); // same type/signature mask, fresh sentence
+        }
+        return nextPremise(); // new random type
+      }, state.guard);
+
+      state.history.push(item);
+      $('#premise').textContent = 'Premise: ' + item.premise;
+      $('#status').textContent  = `Type ${item.typeId} · n-back ${state.n}`;
+      $('#btnMatch').disabled = false; $('#btnNoMatch').disabled = false;
+
+      clearTimeout(state.timer);
+      state.timer = setTimeout(()=>{
+        // omission
+        state.omissions++; state.resp++;
+        const expectMatch = state.schedule[state.i];
+        $('#status').textContent = expectMatch ? 'Time up · expected MATCH' : 'Time up · expected NO MATCH';
+        state.i++; updateKPI(); present();
+      }, state.sec*1000);
+    } catch(err){
+      console.error('present() error:', err);
+      logLine('ERROR: '+err.message);
+      stopSession();
     }
-
-    // guarantee uniqueness of the rendered sentence
-    item.premise = uniqPremise(()=>item.premise, state.guard);
-
-    state.history.push(item);
-    $('#premise').textContent = 'Premise: ' + item.premise;
-    $('#status').textContent = `Type ${item.typeId} · n-back ${state.n}`;
-    $('#btnMatch').disabled = false; $('#btnNoMatch').disabled = false;
-
-    // schedule timeout for omission
-    clearTimeout(state.timer);
-    state.timer = setTimeout(()=>{
-      // omission
-      state.omissions++;
-      state.resp++;
-      const expectMatch = state.schedule[state.i];
-      if(expectMatch){ $('#status').textContent = 'Time up · expected MATCH'; }
-      else { $('#status').textContent = 'Time up · expected NO MATCH'; }
-      state.i++; updateKPI(); present();
-    }, state.sec*1000);
   }
 
   function judge(isMatch){
@@ -792,6 +797,8 @@
     if(e.code==='Space'){ e.preventDefault(); judge(true) }
     if(e.code==='Enter'){ e.preventDefault(); judge(false) }
   })
+
+  window.addEventListener('error', e => { logLine('Global ERROR: '+ (e.error?.message || e.message)); });
 
   // init
   syncSec(8); syncTrials(40); updateKPI();
