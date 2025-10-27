@@ -1,1 +1,424 @@
-.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Imagi‑World 2.0 — Single Mode</title>
+  <style>
+    :root{
+      --bg:#0b0f1a;--panel:#121a2b;--ink:#e6eefc;--muted:#9ab;--accent:#ff4d6d;--accent2:#2ee6a7;--card:#0f1627;--ok:#2ee6a7;--warn:#ffcc66;--bad:#ff6b6b;--edge:#203252
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto;letter-spacing:.2px;background:radial-gradient(1200px 800px at 20% -10%,#1b2743 0%,rgba(27,39,67,0) 60%),radial-gradient(1200px 900px at 120% 120%,#1a2c4d 0%,rgba(26,44,77,0) 55%),var(--bg);color:var(--ink)}
+    header{padding:24px 16px;text-align:center}
+    h1{margin:.2rem 0;font-size:clamp(1.5rem,2.2vw+1rem,2.4rem)}
+    .sub{color:var(--muted);font-size:.95rem}
+    main{max-width:1100px;margin:0 auto;padding:16px;display:grid;grid-template-columns:340px 1fr;gap:16px}
+    @media (max-width:980px){main{grid-template-columns:1fr}}
+    .panel{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.00));border:1px solid var(--edge);border-radius:14px;padding:16px}
+    .controls .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0}
+    .controls label{font-weight:700}
+    input[type="range"]{width:100%}
+    input[type="number"], select, textarea{background:#0a1122;border:1px solid #1f2f4a;color:var(--ink);border-radius:8px;padding:8px 10px}
+    textarea{width:100%;min-height:120px;resize:vertical;font-family:ui-monospace,Consolas,Menlo,monospace}
+    button{appearance:none;border:1px solid transparent;background:var(--accent);color:white;font-weight:800;padding:10px 14px;border-radius:10px;cursor:pointer;transition:.15s transform,.15s box-shadow}
+    button:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(255,77,109,.25)}
+    button.secondary{background:#17233d;color:var(--ink);border-color:#28395f}
+    button.ghost{background:transparent;border-color:#2b3f64}
+    button.ok{background:var(--ok)}
+    button.bad{background:var(--bad)}
+    .row.wrap{flex-wrap:wrap}
+    .tag{display:inline-flex;align-items:center;gap:8px;background:#0f1b33;border:1px solid #213359;border-radius:999px;padding:4px 10px;font-size:.8rem;color:#cfe}
+    .stack{display:flex;flex-direction:column;gap:10px}
+    .grid{display:grid;gap:10px}
+    .grid.cols-2{grid-template-columns:1fr 1fr}
+    @media(max-width:520px){.grid.cols-2{grid-template-columns:1fr}}
+    .game{min-height:360px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px}
+    .premise{font-size:1.25rem;color:#cfe;min-height:64px}
+    .meta{font-size:.9rem;color:var(--muted)}
+    .big{font-size:1.8rem;font-weight:800}
+    .pill{padding:.2rem .5rem;border:1px solid #2a3d63;border-radius:999px;background:#0e1730;font-size:.85rem;color:#cbd6ff}
+    .kbd{background:#111a33;border:1px solid #2a3d63;border-bottom-width:3px;border-radius:6px;padding:4px 8px;font-family:ui-monospace,Consolas}
+    .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+    .stat{background:var(--card);border:1px solid var(--edge);border-radius:10px;padding:10px}
+    .stat .label{color:var(--muted);font-size:.8rem}
+    .stat .val{font-size:1.4rem;font-weight:800}
+    .journal{background:var(--card);border:1px dashed #2a3d63;border-radius:10px;padding:10px;max-height:160px;overflow:auto;font-family:ui-monospace,Consolas,monospace;font-size:.9rem}
+    .flex{display:flex;gap:10px;align-items:center;justify-content:center}
+    .sep{height:1px;background:#213359;margin:10px 0}
+    .notice{background:#112244;border:1px solid #264373;padding:10px;border-radius:10px;color:#cde;font-size:.95rem}
+    details{background:#0c142a;border:1px solid #203254;border-radius:10px;padding:10px}
+    summary{cursor:pointer;font-weight:800}
+    .hidden{display:none !important}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Imagi‑World 2.0 • Single Mode</h1>
+    <div class="sub">One streamed modality. All 62 reasoning families. N‑back coherence. Compass moves only guide analogies; logic engine judges matches.</div>
+  </header>
+
+  <main>
+    <!-- LEFT: SESSION + DATA -->
+    <section class="panel controls stack">
+      <div class="row"><label>N‑Back <span class="pill" id="lblN">2</span></label><input id="inpN" type="range" min="1" max="5" value="2"/></div>
+      <div class="row"><label>Atoms per premise k <span class="pill" id="lblK">2</span></label><input id="inpK" type="range" min="1" max="4" value="2"/></div>
+      <div class="row"><label>Trials per session</label><input id="inpTrials" type="number" min="5" max="2000" step="1" value="40"/></div>
+      <div class="row wrap">
+        <button id="btnStart" class="ok">Start</button>
+        <button id="btnStop" class="bad" disabled>Stop</button>
+        <button id="btnRepeat" class="secondary" disabled>Repeat premise</button>
+        <button id="btnExport" class="ghost">Export log</button>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="stack">
+        <label for="txtDataset"><strong>Paste dataset</strong> (the 62×(8–10) examples). No selections. The engine auto‑mixes all families.</label>
+        <textarea id="txtDataset" placeholder="Paste full text of ‘MAPPING 8 EXAMPLES FOR EACH’. The parser will auto‑detect families 1..62 and their examples, including dual‑premise sets and rationales."></textarea>
+        <div class="row wrap">
+          <button id="btnParse" class="secondary">Parse dataset</button>
+          <span id="parseStatus" class="tag">No dataset loaded</span>
+        </div>
+      </div>
+
+      <details>
+        <summary>Session options</summary>
+        <div class="row"><label>Auto‑advance</label><input id="optAuto" type="checkbox"/></div>
+        <div class="row"><label>Strict inverse matching</label><input id="optInverse" type="checkbox" checked/></div>
+        <div class="row"><label>Lock anchors across session</label><input id="optLock" type="checkbox"/></div>
+      </details>
+
+      <div class="sep"></div>
+      <div class="notice">Single‑mode policy: type filters are disabled. The engine samples across all 62 reasoning families uniformly or by curriculum pacing.
+      </div>
+    </section>
+
+    <!-- RIGHT: GAME AREA -->
+    <section class="panel game stack">
+      <div id="lblFamily" class="tag">Family: —</div>
+      <div id="premise" class="premise">Press <span class="kbd">Start</span> to begin</div>
+      <div id="assoc" class="meta"></div>
+      <div class="flex">
+        <button id="btnMatch" class="ok" disabled>Match <span class="kbd">Space</span></button>
+        <button id="btnNoMatch" class="bad" disabled>No match <span class="kbd">Enter</span></button>
+      </div>
+      <div id="feedback" class="meta"></div>
+
+      <div class="stats">
+        <div class="stat"><div class="label">Trial</div><div id="stTrial" class="val">0</div></div>
+        <div class="stat"><div class="label">Score</div><div id="stScore" class="val">0</div></div>
+        <div class="stat"><div class="label">Accuracy</div><div id="stAcc" class="val">—</div></div>
+        <div class="stat"><div class="label">Rolling</div><div id="stRoll" class="val">—</div></div>
+        <div class="stat"><div class="label">Omissions</div><div id="stMiss" class="val">0</div></div>
+      </div>
+      <div class="journal" id="journal" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <template id="tplPremise">
+    <article>
+      <header class="meta"></header>
+      <section class="meta"></section>
+    </article>
+  </template>
+
+  <script>
+  // -------------------------
+  // Imagi‑World 2.0 — Engine
+  // Single streamed modality covering 62 reasoning families.
+  // Dataset parser consumes the user‑pasted 62×(8–10) examples text.
+  // No type toggles. N‑back logic and compass semantics preserved.
+  // -------------------------
+
+  const state = {
+    n: 2,
+    k: 2,
+    trials: 40,
+    running: false,
+    idx: 0,
+    score: 0,
+    hits: 0,
+    answers: 0,
+    omissions: 0,
+    log: [],
+    lastPremises: [], // for debug
+    deck: [], // stream of trials
+    anchors: new Map(), // letter -> user concept (optional)
+    inverseOK: true,
+    lockAnchors: false,
+    auto: false,
+    timer: null,
+    dataset: null,
+    familyCount: 62,
+  };
+
+  // Utility
+  const $ = sel => document.querySelector(sel);
+  const rand = (n)=> Math.floor(Math.random()*n);
+  const sample = arr => arr.length? arr[rand(arr.length)] : undefined;
+
+  // UI refs
+  const lblN = $('#lblN');
+  const lblK = $('#lblK');
+  const inpN = $('#inpN');
+  const inpK = $('#inpK');
+  const inpTrials = $('#inpTrials');
+  const btnStart = $('#btnStart');
+  const btnStop = $('#btnStop');
+  const btnRepeat = $('#btnRepeat');
+  const btnExport = $('#btnExport');
+  const btnMatch = $('#btnMatch');
+  const btnNoMatch = $('#btnNoMatch');
+  const optAuto = $('#optAuto');
+  const optInverse = $('#optInverse');
+  const optLock = $('#optLock');
+  const lblFamily = $('#lblFamily');
+  const premiseEl = $('#premise');
+  const assocEl = $('#assoc');
+  const feedbackEl = $('#feedback');
+  const stTrial = $('#stTrial');
+  const stScore = $('#stScore');
+  const stAcc = $('#stAcc');
+  const stRoll = $('#stRoll');
+  const stMiss = $('#stMiss');
+  const journal = $('#journal');
+  const txtDataset = $('#txtDataset');
+  const btnParse = $('#btnParse');
+  const parseStatus = $('#parseStatus');
+
+  // Events
+  inpN.addEventListener('input', e=>{ state.n= +e.target.value; lblN.textContent=state.n; });
+  inpK.addEventListener('input', e=>{ state.k= +e.target.value; lblK.textContent=state.k; });
+  inpTrials.addEventListener('input', e=>{ state.trials = +e.target.value; });
+  optAuto.addEventListener('change', e=> state.auto = e.target.checked );
+  optInverse.addEventListener('change', e=> state.inverseOK = e.target.checked );
+  optLock.addEventListener('change', e=> state.lockAnchors = e.target.checked );
+
+  btnParse.addEventListener('click', ()=>{
+    try{
+      state.dataset = parseDataset(txtDataset.value);
+      const families = new Set(state.dataset.map(d=>d.family));
+      if(families.size!==62){
+        parseStatus.textContent = `Loaded ${families.size}/62 families, ${state.dataset.length} examples`;
+        parseStatus.style.borderColor = '#ffcc66';
+      }else{
+        parseStatus.textContent = `Loaded all 62 families, ${state.dataset.length} examples`;
+        parseStatus.style.borderColor = '#2ee6a7';
+      }
+    }catch(err){
+      parseStatus.textContent = 'Parse failed: '+err.message;
+      parseStatus.style.borderColor = '#ff6b6b';
+    }
+  });
+
+  btnStart.addEventListener('click', start);
+  btnStop.addEventListener('click', stop);
+  btnRepeat.addEventListener('click', repeatPremise);
+  btnExport.addEventListener('click', exportLog);
+
+  document.addEventListener('keydown', e=>{
+    if(!state.running) return;
+    if(e.code==='Space'){ e.preventDefault(); onAnswer(true); }
+    if(e.code==='Enter'){ e.preventDefault(); onAnswer(false); }
+  });
+  btnMatch.addEventListener('click', ()=> onAnswer(true));
+  btnNoMatch.addEventListener('click', ()=> onAnswer(false));
+
+  // Core: dataset model
+  /**
+   * Parser for the 62 families text. It expects repeating blocks:
+   *  "NN. <Family name> — <Subtitle>\nPremise set 1 (symbol): ...\nPremise set 2 (association/linking): ...\nAnchors: ...\nTransforms: ...\nResulting mapping: ...\n..."
+   * Returns array of { family:number, key:string, title, symbol, assoc, anchors, transforms, mapping, cue }
+   */
+  function parseDataset(text){
+    if(!text || text.trim().length<10) throw new Error('Empty dataset');
+    const lines = text.split(/\r?\n/);
+    const out = [];
+    let cur = null;
+    const familyHeader = /^(\d{1,2})[a-j]?\.?\s+(.+?)\s+—\s+(.+)$/i;
+    const symbolRe = /^\s*Premise set 1 \(symbol\):\s*(.+)$/i;
+    const assocRe  = /^\s*Premise set 2 \(association\/linking\):\s*(.+)$/i;
+    const anchorsRe= /^\s*Anchors?:\s*(.+)$/i;
+    const transfRe = /^\s*Transforms?:\s*(.+)$/i;
+    const resultRe = /^\s*Resulting mapping:\s*(.+)$/i;
+    const cueRe    = /^\s*n-Back cue:\s*(.+)$/i;
+
+    for(const raw of lines){
+      const line = raw.trim();
+      if(!line) continue;
+      const mH = line.match(familyHeader);
+      if(mH){
+        if(cur) out.push(cur);
+        cur = { family: +mH[1], key: mH[2].trim(), title: mH[3].trim(), symbol:'', assoc:'', anchors:'', transforms:'', mapping:'', cue:'' };
+        continue;
+      }
+      if(!cur) continue;
+      let m;
+      if(m = line.match(symbolRe)) cur.symbol = m[1].trim();
+      else if(m = line.match(assocRe)) cur.assoc = m[1].trim();
+      else if(m = line.match(anchorsRe)) cur.anchors = m[1].trim();
+      else if(m = line.match(transfRe)) cur.transforms = m[1].trim();
+      else if(m = line.match(resultRe)) cur.mapping = m[1].trim();
+      else if(m = line.match(cueRe)) cur.cue = m[1].trim();
+    }
+    if(cur) out.push(cur);
+    if(!out.length) throw new Error('No examples parsed');
+    return out;
+  }
+
+  // Trial generation: single modality blending all families
+  function buildDeck(){
+    const ex = state.dataset || defaultSeed();
+    // mix
+    const pool = [...ex];
+    // ensure we include all families as evenly as possible
+    pool.sort(()=>Math.random()-.5);
+    const deck = [];
+    for(let i=0;i<state.trials;i++){
+      deck.push(pool[i % pool.length]);
+    }
+    return deck;
+  }
+
+  function start(){
+    if(state.running) return;
+    if(!state.dataset){
+      // fallback to minimal seed to make the app runnable; user can paste the full dataset later
+      state.dataset = defaultSeed();
+      parseStatus.textContent = 'Using minimal demo seed (paste full dataset for 62× examples)';
+    }
+    state.deck = buildDeck();
+    state.idx=0; state.score=0; state.hits=0; state.answers=0; state.omissions=0; state.lastPremises=[]; state.log=[];
+    btnStart.disabled=true; btnStop.disabled=false; btnRepeat.disabled=false; btnMatch.disabled=false; btnNoMatch.disabled=false;
+    state.running=true;
+    nextTrial();
+  }
+
+  function stop(){
+    state.running=false;
+    clearTimeout(state.timer);
+    btnStart.disabled=false; btnStop.disabled=true; btnRepeat.disabled=true; btnMatch.disabled=true; btnNoMatch.disabled=true;
+    feedback('Session stopped', '');
+  }
+
+  function repeatPremise(){
+    if(!state.running) return;
+    const cur = state.deck[state.idx-1];
+    if(cur) showPremise(cur, state.idx-1);
+  }
+
+  function exportLog(){
+    const blob = new Blob([JSON.stringify({
+      n:state.n,k:state.k,trials:state.trials,answers:state.answers,score:state.score,omissions:state.omissions,log:state.log
+    },null,2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `imagi-world-2-log-${Date.now()}.json`;
+    a.click();
+  }
+
+  function nextTrial(){
+    if(!state.running) return;
+    if(state.idx>=state.trials){
+      stop();
+      return;
+    }
+    const item = state.deck[state.idx];
+    showPremise(item, state.idx);
+    state.idx++;
+    stTrial.textContent = state.idx;
+    if(state.auto){
+      clearTimeout(state.timer);
+      state.timer = setTimeout(()=> onAnswer(undefined), 6000);
+    }
+  }
+
+  function showPremise(item, idx){
+    lblFamily.textContent = `Family ${item.family}: ${item.key}`;
+    premiseEl.textContent = item.symbol;
+    assocEl.textContent = item.assoc ? `Associations: ${item.assoc}`:'';
+    feedback('','');
+    state.lastPremises.push({ idx, family:item.family, symbol:item.symbol });
+    if(state.lastPremises.length>50) state.lastPremises.shift();
+    journalPrepend(`#${idx+1} ▸ ${item.symbol}`);
+  }
+
+  // N‑back matching: compare current premise to t−n under allowed inversions (axis inverses and dual‑head symmetry)
+  function isMatch(idx){
+    if(idx - state.n < 0) return false;
+    const cur = state.deck[idx];
+    const prev = state.deck[idx - state.n];
+    // Compare symbol strings via normalized relation atoms.
+    const parseAtoms = s => (s.match(/[A-Z] is (north|south|east|west) of [A-Z]/gi) || []).map(x=>x.toLowerCase()).sort().join('|');
+    const a = parseAtoms(cur.symbol);
+    const b = parseAtoms(prev.symbol);
+    if(a===b) return true; // identical structure
+    if(state.inverseOK){
+      // Axis inversions: swap heads to form allowed inverses, e.g., "X east of Y" ↔ "Y west of X"
+      const invert = s => s
+        .replace(/north of/gi,'__N__').replace(/south of/gi,'north of').replace(/__N__/g,'south of')
+        .replace(/east of/gi,'__E__').replace(/west of/gi,'east of').replace(/__E__/g,'west of')
+        .replace(/([A-Z]) is (north|south|east|west) of ([A-Z])/gi,(m,a,dir,c)=>`${c} is ${dir} of ${a}`);
+      const bInv = parseAtoms(invert(prev.symbol));
+      return a===bInv;
+    }
+    return false;
+  }
+
+  function onAnswer(choice){
+    const idx = state.idx-1; // current shown
+    const match = isMatch(idx);
+    let correct = false;
+    if(choice===undefined){
+      state.omissions++;
+      stMiss.textContent = state.omissions;
+      feedback('Omission recorded','warn');
+    }else{
+      state.answers++;
+      correct = (choice && match) || (!choice && !match);
+      if(correct){ state.score++; state.hits++; feedback('Correct','ok'); }
+      else{ feedback('Incorrect','bad'); }
+      stScore.textContent = state.score;
+      const acc = state.answers? Math.round(100*state.score/state.answers): 0;
+      stAcc.textContent = acc+'%';
+      stRoll.textContent = rollingAcc(10)+'%';
+      state.log.push({ idx, choice, match, correct, family:state.deck[idx].family });
+    }
+    // advance after short pause
+    clearTimeout(state.timer);
+    state.timer = setTimeout(nextTrial, 800);
+  }
+
+  function rollingAcc(k){
+    const tail = state.log.slice(-k);
+    if(!tail.length) return 0;
+    const good = tail.filter(x=>x.correct).length;
+    return Math.round(100*good/tail.length);
+  }
+
+  function journalPrepend(text){
+    const div = document.createElement('div');
+    div.textContent = text;
+    journal.prepend(div);
+  }
+
+  // Minimal demo seed spanning a few families to make the UI runnable without paste.
+  function defaultSeed(){
+    return [
+      {family:1, key:'Circularity via drift', title:'', symbol:'B is north of A; some C is north of B; some C is east of A.', assoc:'Support above Claim; some Filtered‑Support above Support; that Filtered‑Support analogue of Claim.', anchors:'', transforms:'', mapping:'', cue:''},
+      {family:2, key:'Modus ponens with decoy disjunction', title:'', symbol:'If D then E; either F or D; F is false.', assoc:'If Smoke then Sprinklers; either Test‑Mode or Smoke; Test‑Mode off.', anchors:'', transforms:'', mapping:'', cue:''},
+      {family:3, key:'Modus tollens with inert universal', title:'', symbol:'H is north of G; not H; all U are J.', assoc:'Transmission‑Drops above Lockdown; not Transmission‑Drops; everyone registered.', anchors:'', transforms:'', mapping:'', cue:''},
+      {family:4, key:'Hypothetical syllogism with fork collapse', title:'', symbol:'If K then L; if L then M; K or N; not N.', assoc:'Order‑Placed then Picked; Picked then Shipped; choose Order‑Placed or Manual‑Bypass; not Manual‑Bypass.', anchors:'', transforms:'', mapping:'', cue:''},
+      {family:5, key:'Disjunctive syllogism under contradiction', title:'', symbol:'P or Q; if Q then not R; R.', assoc:'Evac‑Route or Shelter‑In‑Place; if Shelter‑In‑Place then no Alarm‑Sounding; Alarm‑Sounding.', anchors:'', transforms:'', mapping:'', cue:''}
+    ];
+  }
+
+  // Accessibility hints
+  window.addEventListener('load',()=>{
+    lblN.textContent = state.n; lblK.textContent = state.k;
+  });
+  </script>
+</body>
+</html>
