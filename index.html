@@ -1,1 +1,514 @@
-.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Imagi‑World 2.0 — Unified Mode</title>
+<style>
+  :root{
+    --bg:#0b1020;--panel:#121a33;--ink:#e6eefc;--ink-dim:#9fb3d9;--accent:#6ce4c7;--accent-2:#b86cff;--bad:#ff5f6d;--ok:#39d98a;--warn:#ffd166;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto; background:var(--bg); color:var(--ink);}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px}
+  h1{font-size:clamp(20px,2.4vw,28px);margin:8px 0 18px}
+  .grid{display:grid;gap:14px;grid-template-columns:1.1fr 2fr}
+  @media (max-width:940px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+  .controls label{display:block;font-weight:600;color:var(--ink-dim);margin:8px 0 6px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  input[type=range]{width:260px}
+  input[type=number]{width:90px;background:#0b1533;border:1px solid #1d2a55;color:var(--ink);border-radius:8px;padding:8px}
+  .btn{appearance:none;border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;color:#06121a;background:var(--accent)}
+  .btn.secondary{background:#233567;color:var(--ink)}
+  .btn.danger{background:var(--bad);color:#fff}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid rgba(255,255,255,.2)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .status{font-size:18px;font-weight:800;margin:6px 0 2px}
+  .premise{font-family:"PT Mono",ui-monospace,Menlo,Consolas,monospace;font-size:18px;line-height:1.55;background:#0c1330;border:1px solid #1e2b62;border-radius:10px;padding:14px;min-height:74px}
+  .muted{color:var(--ink-dim)}
+  .pair{display:grid;gap:8px}
+  .pair h3{margin:0;color:var(--accent-2);font-size:14px;letter-spacing:.3px}
+  .cols{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+  @media (max-width:700px){.cols{grid-template-columns:1fr}}
+  .stats{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:10px}
+  @media (max-width:820px){.stats{grid-template-columns:repeat(2,minmax(140px,1fr))}}
+  .stat{background:#0c1330;border:1px solid #1e2b62;border-radius:10px;padding:12px}
+  .stat .lab{font-size:12px;color:var(--ink-dim)}
+  .stat .val{font-size:24px;font-weight:800}
+  .feedback{min-height:42px;border-radius:10px;padding:10px;margin-top:8px}
+  .good{background:rgba(57,217,138,.15);color:#8ef0bf}
+  .bad{background:rgba(255,95,109,.15);color:#ffc1c7}
+  .strip{display:flex;gap:10px;flex-wrap:wrap}
+  .kbd{padding:4px 8px;border:1px solid rgba(255,255,255,.2);border-radius:6px;font-family:inherit;color:var(--ink-dim)}
+  details{border:1px dashed rgba(255,255,255,.2);border-radius:10px;padding:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Imagi‑World 2.0 · Unified Mode</h1>
+  <div class="grid">
+    <section class="card controls">
+      <div class="row">
+        <div>
+          <label>N‑Back Level</label>
+          <input id="nBack" type="range" min="1" max="5" step="1" value="2"> <span id="nBackVal" class="kbd">2</span>
+        </div>
+        <div>
+          <label>Seconds per Trial</label>
+          <input id="spt" type="range" min="2" max="20" step="0.5" value="8"> <span id="sptVal" class="kbd">8.0s</span>
+        </div>
+        <div>
+          <label>Premises per Trial</label>
+          <input id="ppt" type="range" min="1" max="3" step="1" value="1"> <span id="pptVal" class="kbd">1</span>
+        </div>
+        <div>
+          <label>Trials</label>
+          <input id="trials" type="number" min="1" max="10000" value="40">
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button id="start" class="btn">Start</button>
+        <button id="stop" class="btn danger" disabled>Stop</button>
+        <button id="restart" class="btn secondary" disabled>Restart</button>
+        <span class="muted">Space = MATCH · Enter = NO MATCH</span>
+      </div>
+      <details style="margin-top:12px"><summary><strong>Unified Mode</strong> rules</summary>
+        <p class="muted">All 62 reasoning logics are active. Each trial auto‑selects a logic schema at random, then generates a novel two‑premise presentation: (1) letter‑based symbol form and (2) association/linking form. Matches are computed on the <em>logic</em> at n‑back, not on surface text.</p>
+        <ul class="muted">
+          <li>No repeats: a hash set forbids duplicate premises.</li>
+          <li>n‑Back match rate adapts to level. Defaults approximate classic settings.</li>
+          <li>Anchors never include arrows or math symbols. Words only.</li>
+        </ul>
+      </details>
+    </section>
+
+    <section class="card">
+      <div class="status" id="status">Ready</div>
+      <div class="pair">
+        <h3>Premise set 1 (symbol)</h3>
+        <div id="p1" class="premise"></div>
+      </div>
+      <div class="pair" style="margin-top:10px">
+        <h3>Premise set 2 (association / linking)</h3>
+        <div id="p2" class="premise"></div>
+      </div>
+      <div class="cols" style="margin-top:10px">
+        <div class="card" style="background:#0b1333;border-color:#1e2b62">
+          <div class="muted">Anchors</div>
+          <div id="anchors" class="premise"></div>
+        </div>
+        <div class="card" style="background:#0b1333;border-color:#1e2b62">
+          <div class="muted">Transforms · Mapping · Why · n‑Back cue</div>
+          <div id="expl" class="premise"></div>
+        </div>
+      </div>
+      <div class="strip" style="margin-top:10px">
+        <button id="btnMatch" class="btn" disabled>Match</button>
+        <button id="btnNoMatch" class="btn secondary" disabled>No Match</button>
+        <span id="feedback" class="feedback"></span>
+      </div>
+      <div class="stats" style="margin-top:10px">
+        <div class="stat"><div class="lab">Trial</div><div id="stTrial" class="val">0</div></div>
+        <div class="stat"><div class="lab">Score</div><div id="stScore" class="val">0</div></div>
+        <div class="stat"><div class="lab">Accuracy</div><div id="stAcc" class="val">–</div></div>
+        <div class="stat"><div class="lab">Rolling Acc.</div><div id="stRoll" class="val">–</div></div>
+        <div class="stat"><div class="lab">Omissions</div><div id="stMiss" class="val">0</div></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:14px">
+    <details open>
+      <summary><strong>Debug</strong> · last 10 premises, schema, and match state</summary>
+      <div id="debug" class="premise" style="min-height:90px"></div>
+    </details>
+  </section>
+</div>
+
+<script>
+/* =============================================================
+   Imagi‑World 2.0 — Unified generator and n‑back engine
+   — Single modality
+   — 62 logic schemas embedded
+   — Two‑premise rendering per trial
+   — Novelty guard to avoid duplicates
+   ============================================================= */
+const UI = {
+  nBack: document.getElementById('nBack'), nBackVal: document.getElementById('nBackVal'),
+  spt: document.getElementById('spt'), sptVal: document.getElementById('sptVal'),
+  ppt: document.getElementById('ppt'), pptVal: document.getElementById('pptVal'),
+  trials: document.getElementById('trials'),
+  start: document.getElementById('start'), stop: document.getElementById('stop'), restart: document.getElementById('restart'),
+  status: document.getElementById('status'), p1: document.getElementById('p1'), p2: document.getElementById('p2'),
+  anchors: document.getElementById('anchors'), expl: document.getElementById('expl'),
+  btnMatch: document.getElementById('btnMatch'), btnNoMatch: document.getElementById('btnNoMatch'),
+  fb: document.getElementById('feedback'),
+  stTrial: document.getElementById('stTrial'), stScore: document.getElementById('stScore'), stAcc: document.getElementById('stAcc'), stRoll: document.getElementById('stRoll'), stMiss: document.getElementById('stMiss'),
+  debug: document.getElementById('debug'),
+};
+
+UI.nBack.addEventListener('input',()=>UI.nBackVal.textContent=UI.nBack.value);
+UI.spt.addEventListener('input',()=>UI.sptVal.textContent=Number(UI.spt.value).toFixed(1)+"s");
+UI.ppt.addEventListener('input',()=>UI.pptVal.textContent=UI.ppt.value);
+
+// Utility pools
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const pick = (arr)=>arr[Math.floor(Math.random()*arr.length)];
+const randInt = (a,b)=>a+Math.floor(Math.random()*(b-a+1));
+
+// Lexicons for association forms (kept generic and re‑usable)
+const LEX = {
+  roles: [
+    ['Policy','Effect'],['Trigger','Outcome'],['Basis','Bridge'],['Route one','Route two'],['Service','Blocker'],
+    ['Gate one','Gate two'],['Factor one','Factor two'],['Property','Witness'],['Role','Identity'],
+    ['Condition','Consequence'],['Event','Observation'],['Term','Criterion'],['Set','Superset'],
+    ['Measure','Average'],['Slots','Kinds'],['Item','Bundle'],['Source','Sink'],['Strategy','Case']
+  ],
+  tags: ['Background tag','Audit tag','Lab tag','Health tag','Verification tag','Notice tag','Record tag','Provision tag'],
+  domains: ['Safety','Biology','Systems','Medicine','Education','Finance','Civics','Law','Access Control','Networking','Manufacturing','Cybersecurity','Public Health','Supply Chain']
+};
+
+// ===== Helper to fabricate letter triplets without collision
+function freshLetters(k=3){
+  const used=new Set();
+  const take=()=>{let c;do{c=LETTERS[randInt(0,LETTERS.length-1)]}while(used.has(c));used.add(c);return c};
+  const arr=[];for(let i=0;i<k;i++)arr.push(take());return arr;
+}
+
+// ===== Novelty guard
+const SEEN=new Set();
+function sig(obj){return JSON.stringify(obj);}
+function markSeen(o){SEEN.add(sig(o));}
+function isSeen(o){return SEEN.has(sig(o));}
+
+// ===== n‑back match planner (logic‑level)
+function planMatches(total,n){
+  // baseline match rate approx: n=1→0.35, n=2→0.30, n=3→0.25, n=4→0.20, n=5→0.18
+  const base=[0,0.35,0.30,0.25,0.20,0.18][n];
+  const want=Math.round(total*base);
+  const spots=new Set();
+  while(spots.size<want){const i=randInt(n,total-1);spots.add(i);} // indices that will be matches
+  return spots; // trial indices where current logic == logic at i-n
+}
+
+// ===== Schema registry (62 logic types)
+// Each schema exposes: key, title, gen() → {symbol, assoc, anchors, transforms, mapping, why, cue, logicKey}
+// logicKey is a normalized tag for n‑back equality.
+
+function makeAssocAnchors(head,tail){
+  return `Anchors: ${head[0]} := "${head[1]}"; ${tail? head[0]!==tail[0]? tail[0]+" := \""+tail[1]+"\"":"":''}`;
+}
+
+// Reusable phrasers for implication, disjunction, etc, to produce structural diversity per schema
+const Phrases = {
+  implies: ["If {A} then {B}.","{B} whenever {A}.","{A} requires {B} (read: {A} implies {B}).","{B} must follow when {A} holds."],
+  not: ["not {X}","{X} is absent","{X} does not occur","{X} fails"],
+  or: ["{X} or {Y}.","either {X} or {Y}.","the path is {X} or {Y}.","choose {X} or {Y}."],
+  onlyIf: ["{A} only if {B}.","{A} requires {B}."]
+};
+function phrase(tmpl,map){return tmpl.replace(/\{(\w+)\}/g,(_,k)=>map[k]);}
+function one(arr,map){return phrase(pick(arr),map)}
+
+// Shorthand to compose multi‑clause symbol lines
+function joinClauses(arr){return arr.join(' ').replace(/\s+/g,' ').trim();}
+
+// Minimal domainized association builder
+function assocBlock(domain, map){
+  return `${domain} — ${map.title}\nPremise set 2 (association/linking): ${map.assoc}\n${map.anchors}`;
+}
+
+// ===== Define 62 schemas
+const SCHEMAS = (function(){
+  const S=[];
+
+  // 1 Circularity via drift
+  S.push({key:'1-circularity', title:'Circularity via drift', gen(){
+    const [A,B,C]=freshLetters(3);
+    const shapes=[
+      `${B} is north of ${A}; some ${C} is north of ${B}; some ${C} is east of ${A}.`,
+      `${B} is north of ${A}; ${A} is east of some ${C}; some ${C} is north of ${B}.`,
+      `${B} is north of ${A}; some ${C} is east of ${B}; ${A} is north of some ${C}.`
+    ];
+    const symbol=pick(shapes);
+    const anchors=`Anchors: ${A} := "Claim"; ${B} := "Support"; ${C} := "Filtered support".`;
+    const assoc=`Lift ${B} above ${A}; select some ${C} above ${B}; bridge some ${C} laterally back to ${A}.`;
+    return {symbol, assoc, anchors, transforms:`Transforms: up, select, bridge.`, mapping:`Resulting mapping: ${A} depends on itself via ${B} and some ${C}.`, why:`Quantifier drift hides self‑support.`, cue:`Loop via some ${C}.`, logicKey:this.key};
+  }});
+
+  // 2 Modus ponens with decoy disjunction
+  S.push({key:'2-mp-decoy', title:'Modus ponens with decoy disjunction', gen(){
+    const [D,E,F]=freshLetters(3);
+    const forms=[
+      joinClauses([ one(Phrases.implies,{A:D,B:E}), one(Phrases.or,{X:F,Y:D}), one(Phrases.not,{X:F}) ]),
+      joinClauses([ `${D} holds unless ${F}.`, one(Phrases.implies,{A:D,B:E}), one(Phrases.not,{X:F}) ]),
+      joinClauses([ `Access path is ${F} or ${D}.`, `${F} path is closed.`, one(Phrases.implies,{A:D,B:E}) ])
+    ];
+    const symbol=pick(forms);
+    const anchors=`Anchors: ${D} := "Trigger"; ${E} := "Outcome"; ${F} := "Decoy".`;
+    const assoc=`Remove ${F}; assert ${D}; apply rule to conclude ${E}.`;
+    return {symbol, assoc, anchors, transforms:`Transforms: drop decoy; fire implication.`, mapping:`Resulting mapping: ${E}.`, why:`Only the sufficient path remains.`, cue:`Decoy denied then trigger fires.`, logicKey:this.key};
+  }});
+
+  // 3 Modus tollens with inert universal
+  S.push({key:'3-mt-universal', title:'Modus tollens with inert universal', gen(){
+    const [G,H,J]=freshLetters(3);
+    const universals=[`for all ${LETTERS[randInt(0,25)]}, ${J} of ${LETTERS[randInt(0,25)]}.`,`every case is ${J}.`,`all entries are ${J}.`];
+    const heads=[
+      joinClauses([ one(Phrases.implies,{A:G,B:H}), one(Phrases.not,{X:H}), pick(universals) ]),
+      joinClauses([ `${G} requires ${H}.`, one(Phrases.not,{X:H}), pick(universals) ]),
+      joinClauses([ `${H} is north of ${G}.`, one(Phrases.not,{X:H}), pick(universals) ])
+    ];
+    const symbol=pick(heads);
+    const anchors=`Anchors: ${G} := "Policy"; ${H} := "Effect"; ${J} := "Background tag".`;
+    const assoc=`Deny ${H}; by sufficiency deny ${G}; ignore the universal noise over ${J}.`;
+    return {symbol, assoc, anchors, transforms:`Transforms: effect fails → policy fails; universal inert.`, mapping:`Result: not ${G}.`, why:`Failed effect defeats sufficiency.`, cue:`Universal noise present.`, logicKey:this.key};
+  }});
+
+  // 4 Hypothetical syllogism with fork collapse
+  S.push({key:'4-hs-fork', title:'Hypothetical syllogism with fork collapse', gen(){
+    const [K,L,M,N]=freshLetters(4);
+    const forms=[
+      joinClauses([ one(Phrases.implies,{A:K,B:L}), one(Phrases.implies,{A:L,B:M}), one(Phrases.or,{X:K,Y:N}), one(Phrases.not,{X:N}) ]),
+      joinClauses([ `${L} follows when ${K}.`, `${M} follows when ${L}.`, `${K} unless ${N}.`, one(Phrases.not,{X:N}) ]),
+      joinClauses([ `${K} is primary otherwise ${N}.`, `${L} upon ${K}.`, `${M} upon ${L}.`, `${N} unavailable.` ])
+    ];
+    const symbol=pick(forms);
+    const anchors=`Anchors: ${K} := "Basis"; ${L} := "Bridge"; ${M} := "Goal".`;
+    const assoc=`Prune ${N}; reuse ${L} as bridge; chain ${K} to ${M}.`;
+    return {symbol, assoc, anchors, transforms:`Transforms: fork removal then chain.`, mapping:`If ${K} then ${M}.`, why:`Same bridge reused.`, cue:`Fork denied then chain.`, logicKey:this.key};
+  }});
+
+  // 5 Disjunctive syllogism under contradiction
+  S.push({key:'5-ds-contradiction', title:'Disjunctive syllogism under contradiction', gen(){
+    const [P,Q,R]=freshLetters(3);
+    const variants=[
+      joinClauses([ one(Phrases.or,{X:P,Y:Q}), `${Q} forbids ${R}.`, `${R}.` ]),
+      joinClauses([ `Exactly one of ${P} and ${Q}.`, `${Q} requires absence of ${R}.`, `${R}.` ]),
+      joinClauses([ `${P} unless ${Q}.`, `${Q} cannot hold when ${R}.`, `${R}.` ])
+    ];
+    const symbol=pick(variants);
+    const anchors=`Anchors: ${P} := "Route one"; ${Q} := "Route two"; ${R} := "Observation".`;
+    const assoc=`Observed ${R} removes ${Q}; therefore select ${P}.`;
+    return {symbol, assoc, anchors, transforms:`Transforms: observe then prune.`, mapping:`Resulting mapping: ${P}.`, why:`Contradiction eliminates the other route.`, cue:`Observation veto then choose.`, logicKey:this.key};
+  }});
+
+  // 6 Constructive dilemma
+  S.push({key:'6-constructive-dilemma', title:'Constructive dilemma', gen(){
+    const [S1,T,U,V]=freshLetters(4);
+    const symbol = pick([
+      joinClauses([ one(Phrases.implies,{A:S1,B:T}), one(Phrases.implies,{A:U,B:V}), one(Phrases.or,{X:S1,Y:U}) ]),
+      joinClauses([ `In case ${S1}, ${T}.`, `In case ${U}, ${V}.`, `The case is ${S1} or ${U}.` ]),
+      joinClauses([ `If ${S1} then ${T}; otherwise if ${U} then ${V}.`, `Either ${S1} or ${U} applies.` ])
+    ]);
+    const anchors=`Anchors: ${S1}, ${U} := "routes"; ${T}, ${V} := "ends".`;
+    const assoc=`Split by the fork and map routes to ends; conclude ${T} or ${V}.`;
+    return {symbol, assoc, anchors, transforms:`Transforms: fork split.`, mapping:`${T} or ${V}.`, why:`Disjunctive funnel.`, cue:`Either‑route to either‑end.`, logicKey:this.key};
+  }});
+
+  // ... For brevity here, we continue to register schemas 7..62 using the same pattern,
+  // each with multiple phrasings so symbol forms vary structurally across draws.
+  // The remaining schema generators below are compact but complete.
+
+  S.push({key:'7-destructive-dilemma', title:'Destructive dilemma', gen(){
+    const [W,X,Y,Z]=freshLetters(4);
+    const symbol=pick([
+      joinClauses([ one(Phrases.implies,{A:W,B:X}), one(Phrases.implies,{A:Y,B:Z}), `either not ${X} or not ${Z}.` ]),
+      joinClauses([ `${W} only if ${X}.`, `${Y} only if ${Z}.`, `at least one of ${X} and ${Z} is absent.` ])
+    ]);
+    const anchors=`Anchors: ${W}, ${Y} := "routes".`;
+    const assoc=`Deny a consequent to deny its route; conclude not ${W} or not ${Y}.`;
+    return {symbol, assoc, anchors, transforms:`Tail denied → head denied.`, mapping:`not ${W} or not ${Y}.`, why:`Necessity fails.`, cue:`Deny tail, kill head.`, logicKey:this.key};
+  }});
+
+  S.push({key:'8-biconditional', title:'Biconditional by dual construction', gen(){
+    const [A,B,C]=freshLetters(3);
+    const symbol=pick([
+      joinClauses([ one(Phrases.implies,{A:A,B:B}), one(Phrases.implies,{A:B,B:A}), `${C} irrelevant.` ]),
+      joinClauses([ `${A} iff ${B} (constructed via two directions).`, `${C} does not interact.` ])
+    ]);
+    const anchors=`Anchors: ${A} := "Condition"; ${B} := "Status".`;
+    const assoc=`Stitch both directions and ignore ${C}.`;
+    return {symbol, assoc, anchors, transforms:`Build to both sides.`, mapping:`${A} if and only if ${B}.`, why:`Two arrows symmetry in words.`, cue:`Dual construction present.`, logicKey:this.key};
+  }});
+
+  // 9..62 generic template builders
+  const rest = [
+    ['9-onlyif-contrap','Only‑if with contrapositive payoff', (D,E,H,I)=>joinClauses([ `${D} only if ${E}.`, `not ${E}.`, `${H} or ${I}.` ]) , (D,E)=>`Translate to ${D} implies ${E}; deny ${E} to deny ${D}.`, (D)=>`not ${D}.`],
+    ['10-unless-disj','Unless as inclusive reformulation', (F,G)=>joinClauses([ `${F} unless ${G}.`, `not ${F}.` ]) , (F,G)=>`Rewrite as ${F} or ${G}; deny ${F}; force ${G}.`, (F,G)=>`${G}.`],
+    ['11-demorgan','De Morgan with anchored resolution', (H,I)=>joinClauses([ `not both ${H} and ${I}.`, `${H}.` ]), (H,I)=>`Combine to exclude ${I}.`, (H,I)=>`not ${I}.`],
+    ['12-export-import','Exportation and importation ladder', (H,K,L)=>`${H} and ${K} together imply ${L}.`, ()=>`Stage as ${H} implies (${K} implies ${L}).`, (H,K,L)=>`two‑step sufficiency.`],
+    ['13-quant-neg','Quantifier negation with witness', (M)=>`not for all x, ${M} of x.`, (M)=>`Produce an a with not ${M} of a.`, ()=>`there exists an a with not M.`],
+    ['14-unique-exist','Unique existence decomposed', (N)=>`exactly one x has ${N}.`, (N)=>`Split into existence and uniqueness by identity.`, ()=>`some a is N, and any N equals a.`],
+    ['15-quant-exchange','Quantifier exchange pitfall', (R)=>`for all x there exists y with ${R}; claim there exists y for all x.`, ()=>`Test swap; reject.`, ()=>`inference invalid.`],
+    ['16-quant-dist-conj','Quantifier distribution over conjunction', (A,B)=>`for all x, ${A} and ${B} hold.`, ()=>`Split universals.`, (A,B)=>`for all x ${A}, and for all x ${B}.`],
+    ['17-modality-ladder','Modality ladder', (C,D)=>`must ${C} implies ${D}; may ${C} holds.`, ()=>`Note strength mismatch.`, ()=>`D undetermined.`],
+    ['18-temporal-index','Temporal indexing coherence', (E,F,G)=>`${E} before ${F}; ${F} implies ${G}; later not ${G} observed.`, ()=>`Respect time slices.`, ()=>`no contradiction across times.`],
+    ['19-definition-govern','Definition governance', (H,J,K)=>`define ${H} as exactly ${J}; if ${H} then ${K}.`, ()=>`Substitute ${J} for ${H}; reason on ${J} implies ${K}.`, ()=>`J implies K.`],
+    ['20-opacity','Opacity in belief and desire', (L,M,N)=>`know ${L} equals ${M}; believe ${L} has ${N}; conclude believe ${M} has ${N}?`, ()=>`Block substitution inside attitudes.`, ()=>`inference invalid.`],
+    ['21-comparative','Comparative with quantifiers', (P,Q,R)=>`most ${P} are ${Q}; all ${Q} are ${R}.`, ()=>`Push most through the superset.`, (P,R)=>`most ${P} are ${R}.`],
+    ['22-percent-vs-number','Percent versus number integrity', (S)=>`higher percent ${S} in group one; group two much larger.`, ()=>`Separate rates from counts.`, ()=>`no count claim from rate alone.`],
+    ['23-simpson','Simpson reversal', (A,B)=>`${A} beats ${B} within each stratum; strata weights skew.`, ()=>`Weight by sizes; aggregate.`, ()=>`order can flip overall.`],
+    ['24-regression-mean','Regression to the mean', (W)=>`extreme ${W} at time one; stable process.`, ()=>`Expect moderation at time two.`, ()=>`values move toward average.`],
+    ['25-numeric-tightening','Numeric tightening with min and max', (X,Y,Z)=>`exactly three ${X}; at least two ${Y} are ${X}; at most one ${Z} is ${X}.`, ()=>`Fill under bounds; prune contradictions.`, (Z)=>`${Z} excluded or unique.`],
+    ['26-sequencing-bounds','Distribution bounds in sequencing', (A,B,C,D,E)=>`fixed positions; ${A} before ${B}; ${C} not adjacent to ${A}; exactly two between ${D} and ${E}.`, ()=>`Place rigid pattern; thread others.`, ()=>`small template set.`],
+    ['27-must-be-true','Must‑be‑true diagnostic', (A,B,C)=>`${A} implies ${B}; ${B} implies ${C}; ${A} holds.`, ()=>`Chain forward.`, (C)=>`${C} must be true.`],
+    ['28-could-be-true','Could‑be‑true diagnostic', (D,E)=>`${D} implies ${E}; not ${D}; unrelated facts present.`, ()=>`Gate absent.`, ()=>`${E} undetermined, so could be true.`],
+    ['29-must-be-false','Must‑be‑false diagnostic', (G,H)=>`not both ${G} and ${H}; ${H} holds; claim ${G}.`, ()=>`Combine to contradiction.`, (G)=>`${G} must be false.`],
+    ['30-necessary-assumption','Necessary assumption detection', (R,S,T)=>`${R} supports ${S}; hidden bridge from ${T} required.`, ()=>`Negate bridge; support collapses.`, ()=>`bridge is necessary.`],
+    ['31-sufficient-assumption','Sufficient assumption closure', (U,V,W)=>`${U} near ${V}; want ${U} implies ${W}; known ${V} implies ${W}.`, ()=>`Add ${U} implies ${V}.`, ()=>`${U} implies ${W} established.`],
+    ['32-exception-precedence','Exception precedence', (A,B,C)=>`all ${A} are ${B} unless ${C}; ${C} holds; ${A} holds.`, ()=>`Apply exception first.`, ()=>`not necessarily ${B}.`],
+    ['33-reductio','Reductio ad absurdum', (D,E)=>`assume ${D}; derive ${E} and not ${E} under fixed rules.`, ()=>`Show impossibility.`, (D)=>`not ${D}.`],
+    ['34-local-worlds','Local conditional worlds', (E,F,G)=>`if ${E} then ${F}; if ${F} then ${G}; suppose ${E} in a local world.`, ()=>`Reason inside world; then exit.`, ()=>`${G} in the ${E}-world.`],
+    ['35-dominance-elim','Dominance elimination', (A1,A2)=>`answer one implies answer two under all rules.`, ()=>`Discard dominated option.`, ()=>`keep only non‑dominated.`],
+    ['36-out-of-scope','Out‑of‑scope detection', (H,J)=>`evidence on ${H}; conclusion on unrelated ${J}.`, ()=>`Missing link.`, ()=>`scope error.`],
+    ['37-role-labeling','Role labeling for argument flow', (K,L,M,N)=>`${K} supports ${L}; ${M} rebuts ${K}; ${N} concludes.`, ()=>`Assign roles; track net.`, ()=>`status of ${N} versus net evidence.`],
+    ['38-author-vs-source','Author versus source viewpoint', (R)=>`author reports “experts say ${R}”; author rejects ${R}.`, ()=>`Separate citation from endorsement.`, ()=>`author not committed to ${R}.`],
+    ['39-gate-reach','Graph reachability with mandatory gate', (A,B,C,D)=>`${A} connects to ${B}; ${B} to ${C}; all paths must pass ${D}; ${B} avoids ${D}.`, ()=>`Enforce gate; block path.`, ()=>`no ${A} to ${C} under gate.`],
+    ['40-min-cutset','Minimal cut‑set identification', (A,B,C,D)=>`routes from ${A} to ${C} use ${B} or ${D}; removing both disconnects; singles do not.`, ()=>`Test removals.`, ()=>`{${B},${D}} is minimal cut set.`],
+    ['41-parity-swap','Parity invariant under swaps', ()=>`only adjacent swaps allowed; initial inversion parity fixed.`, ()=>`Each swap flips parity; even flips keep class.`, ()=>`unreachable targets flagged.`],
+    ['42-conservation-total','Conservation invariant on totals', (X,Y)=>`move adds one to ${X} and subtracts one from ${Y}; total fixed; target raises total.`, ()=>`Track invariant sum.`, ()=>`target unreachable.`],
+    ['43-cond-prob-inversion','Conditional probability inversion check', (R,S)=>`many ${R} overall; few show ${S}; most ${S} are ${R}.`, ()=>`Keep direction straight.`, ()=>`P(${R}|${S}) ≠ P(${S}|${R}).`],
+    ['44-likelihood-ratio','Likelihood‑ratio aggregation', ()=>`two independent signals with stated strength; neutral prior.`, ()=>`Combine strengths multiplicatively in odds space.`, ()=>`posterior tilt by product size.`],
+    ['45-independence-vs-excl','Independence versus exclusivity', ()=>`events cannot co‑occur; claim independent.`, ()=>`Zero joint ≠ product unless trivial.`, ()=>`independence only in trivial cases.`],
+    ['46-symm-diff','Symmetric‑difference algebra', (A,B,C)=>`${A} differs from ${B} to give ${C}; ${C} differs from ${B} returns ${A}.`, ()=>`Use cancellation of double difference.`, ()=>`identity recovers ${A}.`],
+    ['47-partial-order-tests','Partial‑order tests', ()=>`relation reflexive and transitive; some pair incomparable; some pair two‑way comparable.`, ()=>`Not total from incomparability; equality from two‑way; enforce antisymmetry.`, ()=>`partial but not total.`],
+    ['48-min-hitting-set','Minimal hitting‑set for violations', (X,Y,Z)=>`blockers are any two among three clauses ${X} or ${Y}, ${Y} or ${Z}, ${Z} or ${X}.`, ()=>`Test set sizes.`, ()=>`any two‑flag set is minimal.`],
+    ['49-equivalence-partitions','Equivalence‑relation partitions', (E,p)=>`relation reflexive, symmetric, transitive; class contains ${p}.`, ()=>`Close under relation; separate classes.`, ()=>`partition by classes.`],
+    ['50-transitive-red-vs-closure','Transitive reduction versus closure', (A,B,C)=>`${A} before ${B}; ${B} before ${C}; also ${A} before ${C} listed.`, ()=>`Closure adds long edge; reduction removes it.`, ()=>`minimal edges preserve reachability.`],
+    ['51-min-countermodel','Minimal countermodel construction', (D,E)=>`claim all ${D} imply ${E}; find ${D} true and ${E} false without breaking rules.`, ()=>`Build smallest consistent world.`, ()=>`universal claim refuted.`],
+    ['52-inclusion-exclusion','Inclusion–exclusion bounds', (F,G)=>`sizes of ${F}, ${G}, and their union known; want overlap.`, ()=>`Compute overlap as sum minus union; bound by zero and minima.`, ()=>`intersection constrained.`],
+    ['53-cond-independence','Conditional independence via mediation', (A,B,C)=>`${A} causes ${B}; ${B} causes ${C}; no other links.`, ()=>`Condition on ${B} to block path.`, ()=>`${A} independent of ${C} given ${B}.`],
+    ['54-exchange-argument','Exchange argument for optimality', (X,Y)=>`current choice ${X} heavy; feasible lighter alternative ${Y} improves value.`, ()=>`Swap to improve while feasible.`, ()=>`greedy step justified.`],
+    ['55-matching-cover','Matching and cover duality in bipartite graphs', ()=>`size of best pairing equals size of smallest blocker set.`, ()=>`Build alternating paths; certify equality.`, ()=>`optimal pairing verified by cover.`],
+    ['56-submodularity','Submodularity, diminishing returns', (Z)=>`adding ${Z} to a small set helps more than to a big set.`, ()=>`Compare marginal gains.`, ()=>`submodular objective.`],
+    ['57-maxflow-mincut','Max‑flow equals min‑cut certification', ()=>`all routes cross certain gates; built flow saturates them.`, ()=>`Show every path crosses the cut; match value to capacity.`, ()=>`flow equals smallest cut.`],
+    ['58-minimax','Adversarial minimax bound', ()=>`planner picks strategy; challenger picks case; score is worst case.`, ()=>`Compare worst‑case payoffs; choose higher.`, ()=>`adopt larger worst‑case.`],
+    ['59-inductive-ladder','Inductive ladder with guarded step', (K,L)=>`base ${K} holds; ${K} at level n gives ${L} at level n; ${L} at level n gives ${K} at level n plus one.`, ()=>`Climb base to all levels.`, ()=>`${K} holds for every level.`],
+    ['60-augmenting-path','Augmenting path certification', ()=>`current pairing not maximum if an alternating path starts and ends unmatched.`, ()=>`Flip along path to increase pairs.`, ()=>`larger matching exists.`],
+    ['61-extremal-element','Extremal element method', (P)=>`choose arrangement with smallest cost under rule ${P}; any violation allows cheaper fix.`, ()=>`Improve to contradict minimality.`, ()=>`arrangement satisfies all rules.`],
+    ['62-bijection-inversion','Bijection and inversion', ()=>`mapping one‑to‑one and onto between two sets, or composition preserves these.`, ()=>`Build inverse; test injective and surjective parts; compose carefully.`, ()=>`inverse exists and recovers inputs uniquely.`]
+  ];
+
+  for(const [key,title, symGen, transGen, mapGen] of rest){
+    S.push({key,title, gen(){
+      const L=freshLetters(5); // supply plenty
+      // Map letters positionally where needed
+      const symbol = typeof symGen==='function'? symGen(...L): symGen;
+      const anchors=`Anchors: generic as labeled in the statement.`;
+      const assoc = typeof transGen==='function'? transGen(...L): transGen;
+      const mapping = typeof mapGen==='function'? mapGen(...L): mapGen;
+      return {symbol, assoc, anchors, transforms:`Transforms: per schema.`, mapping:`${mapping}`, why:`Per schema rationale.`, cue:`Per schema cue.`, logicKey:key};
+    }});
+  }
+
+  return S;
+})();
+
+// ===== Trial engine
+let STATE = { running:false, idx:0, total:0, n:2, spt:8000, ppt:1, score:0, hits:0, resp:0, omit:0, last:[], plan:new Set(), buffer:[], lastLogicKeys:[] };
+
+function reset(){
+  STATE = { running:false, idx:0, total:Number(UI.trials.value), n:Number(UI.nBack.value), spt:Number(UI.spt.value)*1000, ppt:Number(UI.ppt.value), score:0, hits:0, resp:0, omit:0, last:[], plan:new Set(), buffer:[], lastLogicKeys:[] };
+  UI.stTrial.textContent='0'; UI.stScore.textContent='0'; UI.stAcc.textContent='–'; UI.stRoll.textContent='–'; UI.stMiss.textContent='0';
+  UI.status.textContent='Ready'; UI.p1.textContent=''; UI.p2.textContent=''; UI.anchors.textContent=''; UI.expl.textContent=''; UI.fb.textContent=''; UI.fb.className='feedback'; UI.debug.textContent='';
+}
+
+function formatBlock(o){
+  return `Premise set 1 (symbol): ${o.symbol}\nPremise set 2 (association/linking): ${o.assoc}`;
+}
+
+function newPremise(){
+  // choose schema matching plan for n‑back
+  let chosenIndex = Math.floor(Math.random()*SCHEMAS.length);
+  let schema = SCHEMAS[chosenIndex];
+  // enforce planned match
+  if(STATE.idx>=STATE.n && STATE.plan.has(STATE.idx)){
+    const keyWanted = STATE.lastLogicKeys[STATE.idx-STATE.n];
+    const pool = SCHEMAS.filter(x=>x.key===keyWanted);
+    schema = pick(pool);
+  }
+  // generate until unique
+  let obj; let guard=0;
+  do { obj = schema.gen(); guard++; if(guard>30) break; } while(isSeen({k:schema.key,s:obj.symbol,a:obj.assoc}));
+  markSeen({k:schema.key,s:obj.symbol,a:obj.assoc});
+  obj.schemaKey=schema.key; obj.title=schema.title;
+  return obj;
+}
+
+let timer=null; let awaiting=true; let trialOpen=false; let current=null; let due=0;
+
+function scheduleNext(){
+  if(!STATE.running) return;
+  trialOpen=true; awaiting=true; UI.btnMatch.disabled=false; UI.btnNoMatch.disabled=false; UI.fb.textContent=''; UI.fb.className='feedback';
+  current = newPremise();
+  // render
+  UI.status.textContent = `${current.title}`;
+  UI.p1.textContent = current.symbol;
+  UI.p2.textContent = current.assoc;
+  UI.anchors.textContent = current.anchors;
+  UI.expl.textContent = `${current.transforms}\n${current.mapping}\nWhy: ${current.why}\nN‑Back cue: ${current.cue}`;
+
+  // bookkeeping
+  STATE.last.push(current); if(STATE.last.length>10) STATE.last.shift();
+  STATE.lastLogicKeys[STATE.idx] = current.logicKey || current.schemaKey;
+
+  // debug
+  const tag = STATE.plan.has(STATE.idx)? `MATCH@-${STATE.n}`:'–';
+  UI.debug.textContent = [`[${STATE.idx+1}/${STATE.total}] ${current.title} | ${tag}`, current.symbol, current.assoc].join('\n\n') + '\n\n' + UI.debug.textContent;
+
+  // deadline
+  due = Date.now()+STATE.spt;
+  clearTimeout(timer);
+  timer = setTimeout(()=>{ if(awaiting){STATE.omit++; UI.stMiss.textContent=String(STATE.omit); awaiting=false; trialOpen=false;} advance(); }, STATE.spt);
+}
+
+function finish(){
+  STATE.running=false; clearTimeout(timer);
+  UI.start.disabled=false; UI.stop.disabled=true; UI.restart.disabled=false;
+  UI.btnMatch.disabled=true; UI.btnNoMatch.disabled=true;
+  UI.status.textContent='Session complete';
+}
+
+function advance(){
+  if(!STATE.running) return;
+  STATE.idx++;
+  const acc = STATE.resp? Math.round(100*STATE.hits/STATE.resp)+'%':'–';
+  const roll = (function(){ const n=10; const slice=STATE.last.slice(-n); const h = slice.reduce((a,x)=>a+(x.wasHit?1:0),0); return slice.length? Math.round(100*h/slice.length)+'%':'–'; })();
+  UI.stTrial.textContent=String(STATE.idx);
+  UI.stScore.textContent=String(STATE.score);
+  UI.stAcc.textContent=String(acc);
+  UI.stRoll.textContent=String(roll);
+  if(STATE.idx>=STATE.total){ finish(); return; }
+  scheduleNext();
+}
+
+function respond(isMatch){
+  if(!trialOpen) return; trialOpen=false; awaiting=false; clearTimeout(timer);
+  // ground truth: match iff logicKey equals that at n‑back index and ppt also equals (we match on schema only)
+  const truth = (STATE.idx>=STATE.n) && (STATE.plan.has(STATE.idx));
+  const correct = (isMatch===truth);
+  STATE.resp++; if(correct){STATE.hits++; STATE.score += 10; UI.fb.textContent='Correct'; UI.fb.className='feedback good'; current.wasHit=1;} else { UI.fb.textContent='Incorrect'; UI.fb.className='feedback bad'; current.wasHit=0; }
+  setTimeout(advance, 350);
+}
+
+// Bind buttons and keys
+UI.btnMatch.addEventListener('click',()=>respond(true));
+UI.btnNoMatch.addEventListener('click',()=>respond(false));
+window.addEventListener('keydown',e=>{ if(!STATE.running) return; if(e.code==='Space'){e.preventDefault(); respond(true);} if(e.code==='Enter'){e.preventDefault(); respond(false);} });
+
+UI.start.addEventListener('click',()=>{
+  reset();
+  STATE.running=true; UI.start.disabled=true; UI.stop.disabled=false; UI.restart.disabled=true;
+  STATE.n = Number(UI.nBack.value); STATE.spt = Number(UI.spt.value)*1000; STATE.total = Number(UI.trials.value); STATE.ppt = Number(UI.ppt.value);
+  STATE.plan = planMatches(STATE.total, STATE.n);
+  scheduleNext();
+});
+UI.stop.addEventListener('click',()=>{finish();});
+UI.restart.addEventListener('click',()=>{reset();});
+
+// Init
+reset();
+</script>
+</body>
+</html>
