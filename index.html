@@ -779,8 +779,9 @@
       $('#start').disabled = true; $('#stop').disabled = false;
     } catch(err){
       console.error('startSession() error:', err);
-      $('#status').textContent = 'ERROR starting: ' + err.message;
-      logLine('ERROR start: ' + err.message);
+      const errMsg = err && err.message ? err.message : String(err);
+      $('#status').textContent = 'ERROR starting: ' + errMsg;
+      logLine('ERROR start: ' + errMsg);
       state.running = false;
       $('#start').disabled = false; $('#stop').disabled = true;
     }
