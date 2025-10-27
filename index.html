@@ -192,473 +192,478 @@
     // 1 Circularity via drift
     1(){
       const [A,B,C] = pickLetters(3);
-      const p = sentence([
+      const txt = sentence([
         `${B} ${choice(NORTH)} ${A}`,
         `some ${C} ${choice(NORTH)} ${B}`,
         `some ${C} ${choice(EAST)} ${A}`
       ]);
-      return { premise:p, signature:sig(1,'B>A; some C>B; some C~A') };
+      return { premise:txt, signature:sig(1,'B>A; some C>B; some C~A') };
     },
 
     // 2 Modus ponens with decoy disjunction
     2(){
       const [D,E,F] = pickLetters(3);
-      const p = sentence([
+      const txt = sentence([
         `${choice(IF)} ${D} ${choice(THEN)} ${E}`,
         `${F} ${choice(OR)} ${D}`,
         `${F} ${absent()}`
       ]);
-      return { premise:p, signature:sig(2,'if D then E; F or D; not F') };
+      return { premise:txt, signature:sig(2,'if D then E; F or D; not F') };
     },
 
     // 3 Modus tollens with inert universal
     3(){
       const [G,H,J] = pickLetters(3);
-      const p = sentence([
+      const txt = sentence([
         `${choice(IF)} ${G} ${choice(THEN)} ${H}`,
         `${NOT[0]} ${H}`,
         `for all ${J}, ${J} ${holds()}`
       ]);
-      return { premise:p, signature:sig(3,'if G then H; not H; forall J') };
+      return { premise:txt, signature:sig(3,'if G then H; not H; forall J') };
     },
 
     // 4 Hypothetical syllogism with fork collapse
     4(){
       const [K,L1,M,N] = pickLetters(4);
-      const p = sentence([
+      const txt = sentence([
         `${choice(IF)} ${K} ${choice(THEN)} ${L1}`,
         `${choice(IF)} ${L1} ${choice(THEN)} ${M}`,
         `${K} ${choice(OR)} ${N}`,
         `${NOT[0]} ${N}`
       ]);
-      return { premise:p, signature:sig(4,'K->L->M; K or N; not N') };
+      return { premise:txt, signature:sig(4,'K->L->M; K or N; not N') };
     },
 
     // 5 Disjunctive syllogism under contradiction
     5(){
       const [P,Q,R] = pickLetters(3);
-      const p = sentence([
+      const txt = sentence([
         `${P} ${choice(OR)} ${Q}`,
         `${choice(IF)} ${Q} ${choice(THEN)} ${NOT[0]} ${R}`,
         `${R} ${present()}`
       ]);
-      return { premise:p, signature:sig(5,'P or Q; if Q then not R; R') };
+      return { premise:txt, signature:sig(5,'P or Q; if Q then not R; R') };
     },
 
     // 6 Constructive dilemma
     6(){
       const [S,T,U,V] = pickLetters(4);
-      const p = sentence([
+      const txt = sentence([
         `${choice(IF)} ${S} ${choice(THEN)} ${T}`,
         `${choice(IF)} ${U} ${choice(THEN)} ${V}`,
         `${S} ${choice(OR)} ${U}`
       ]);
-      return { premise:p, signature:sig(6,'if S then T; if U then V; S or U') };
+      return { premise:txt, signature:sig(6,'if S then T; if U then V; S or U') };
     },
 
     // 7 Destructive dilemma
     7(){
       const [W,X,Y,Z] = pickLetters(4);
-      const p = sentence([
+      const txt = sentence([
         `${choice(IF)} ${W} ${choice(THEN)} ${X}`,
         `${choice(IF)} ${Y} ${choice(THEN)} ${Z}`,
         `${NOT[0]} ${X} ${choice(OR)} ${NOT[0]} ${Z}`
       ]);
-      return { premise:p, signature:sig(7,'W->X; Y->Z; not X or not Z') };
+      return { premise:txt, signature:sig(7,'W->X; Y->Z; not X or not Z') };
     },
 
     // 8 Biconditional by dual construction
     8(){
       const [A,B,C] = pickLetters(3);
-      const p = sentence([
+      const txt = sentence([
         `${choice(IF)} ${A} ${choice(THEN)} ${B}`,
         `${choice(IF)} ${B} ${choice(THEN)} ${A}`,
         `${C} is irrelevant`
       ]);
-      return { premise:p, signature:sig(8,'A->B & B->A; C junk') };
+      return { premise:txt, signature:sig(8,'A->B & B->A; C junk') };
     },
 
     // 9 Only-if with contrapositive payoff
     9(){
       const [D,E,H,I] = pickLetters(4);
-      const p = sentence([
+      const txt = sentence([
         `${D} ${choice(ONLYIF)} ${E}`,
         `${NOT[0]} ${E}`,
         `${H} ${choice(OR)} ${I}`
       ]);
-      return { premise:p, signature:sig(9,'D only-if E; not E; noise') };
+      return { premise:txt, signature:sig(9,'D only-if E; not E; noise') };
     },
 
     // 10 Unless as inclusive reformulation
     10(){
       const [F,G] = pickLetters(2);
-      const p = sentence([
+      const txt = sentence([
         `${F} ${UNLESS[0]} ${G}`,
         `${NOT[0]} ${F}`
       ]);
-      return { premise:p, signature:sig(10,'F unless G; not F') };
+      return { premise:txt, signature:sig(10,'F unless G; not F') };
     },
 
     // 11 De Morgan with anchored resolution
     11(){
       const [H,I] = pickLetters(2);
-      const p = sentence([
+      const txt = sentence([
         `not both ${H} and ${I}`,
         `${H} ${present()}`
       ]);
-      return { premise:p, signature:sig(11,'not(H&I); H') };
+      return { premise:txt, signature:sig(11,'not(H&I); H') };
     },
 
     // 12 Exportation and importation ladder
     12(){
       const [H,K,L] = pickLetters(3);
-      const p = sentence([`${H} and ${K} together ensure ${L}`]);
-      return { premise:p, signature:sig(12,'(H & K)->L') };
+      const txt = sentence([`${H} and ${K} together ensure ${L}`]);
+      return { premise:txt, signature:sig(12,'(H & K)->L') };
     },
 
     // 13 Quantifier negation with witness
     13(){
       const [M] = pickLetters(1);
       const a = choice(['a','some a','one a']);
-      const p = sentence([`not for all x, ${M} of x`, `there exists ${a} with not ${M} of ${a}`]);
-      return { premise:p, signature:sig(13,'not forall -> exists not') };
+      const txt = sentence([`not for all x, ${M} of x`, `there exists ${a} with not ${M} of ${a}`]);
+      return { premise:txt, signature:sig(13,'not forall -> exists not') };
     },
 
     // 14 Unique existence decomposed
     14(){
       const [N] = pickLetters(1);
       const a = choice(['a','u']);
-      const p = sentence([`exactly one x has ${N}`, `some ${a} is ${N}`, `any ${N} equals ${a}`]);
-      return { premise:p, signature:sig(14,'exists! -> exists & unique') };
+      const txt = sentence([`exactly one x has ${N}`, `some ${a} is ${N}`, `any ${N} equals ${a}`]);
+      return { premise:txt, signature:sig(14,'exists! -> exists & unique') };
     },
 
     // 15 Quantifier exchange pitfall
     15(){
       const [R] = pickLetters(1);
       const x=choice(['x','agent']); const y=choice(['y','token']);
-      const p = sentence([`for all ${x} there exists ${y} with ${R}`, `claim there exists ${y} for all ${x}`, `the claim is invalid`]);
-      return { premise:p, signature:sig(15,'AxEyR !-> EyAxR') };
+      const txt = sentence([`for all ${x} there exists ${y} with ${R}`, `claim there exists ${y} for all ${x}`, `the claim is invalid`]);
+      return { premise:txt, signature:sig(15,'AxEyR !-> EyAxR') };
     },
 
     // 16 Quantifier distribution over conjunction
     16(){
       const [A,B] = pickLetters(2);
-      const p = sentence([`for all x, ${A} and ${B} hold`, `therefore for all x ${A}, and for all x ${B}`]);
-      return { premise:p, signature:sig(16,'Ax(A&B)->AxA & AxB') };
+      const txt = sentence([`for all x, ${A} and ${B} hold`, `therefore for all x ${A}, and for all x ${B}`]);
+      return { premise:txt, signature:sig(16,'Ax(A&B)->AxA & AxB') };
     },
 
     // 17 Modality ladder
     17(){
       const [C,D] = pickLetters(2);
-      const p = sentence([`must ${C} implies ${D}`, `may ${C} holds`, `${D} remains undetermined`]);
-      return { premise:p, signature:sig(17,'must C->D; may C') };
+      const txt = sentence([`must ${C} implies ${D}`, `may ${C} holds`, `${D} remains undetermined`]);
+      return { premise:txt, signature:sig(17,'must C->D; may C') };
     },
 
     // 18 Temporal indexing coherence
     18(){
       const [E,F,G] = pickLetters(3);
-      const p = sentence([`${E} occurs before ${F}`, `${F} implies ${G}`, `later not ${G} observed`, `no contradiction across times`]);
-      return { premise:p, signature:sig(18,'E<F; F->G; later not G') };
+      const txt = sentence([`${E} occurs before ${F}`, `${F} implies ${G}`, `later not ${G} observed`, `no contradiction across times`]);
+      return { premise:txt, signature:sig(18,'E<F; F->G; later not G') };
     },
 
     // 19 Definition governance
     19(){
       const [H,J,K] = pickLetters(3);
-      const p = sentence([`define ${H} as exactly ${J}`, `if ${H} then ${K}`, `so ${J} implies ${K}`]);
-      return { premise:p, signature:sig(19,'def H==J; H->K => J->K') };
+      const txt = sentence([`define ${H} as exactly ${J}`, `if ${H} then ${K}`, `so ${J} implies ${K}`]);
+      return { premise:txt, signature:sig(19,'def H==J; H->K => J->K') };
     },
 
     // 20 Opacity in belief and desire
     20(){
       const [L,M,N] = pickLetters(3);
-      const p = sentence([`know ${L} equals ${M}`, `believe ${L} has ${N}`, `infer believe ${M} has ${N}?`, `inference invalid`]);
-      return { premise:p, signature:sig(20,'substitution blocked in belief') };
+      const txt = sentence([`know ${L} equals ${M}`, `believe ${L} has ${N}`, `infer believe ${M} has ${N}?`, `inference invalid`]);
+      return { premise:txt, signature:sig(20,'substitution blocked in belief') };
     },
 
     // 21 Comparative with quantifiers
     21(){
       const [P,Q,R] = pickLetters(3);
-      const p = sentence([`most ${P} are ${Q}`, `all ${Q} are ${R}`, `therefore most ${P} are ${R}`]);
-      return { premise:p, signature:sig(21,'most P Q; all Q R => most P R') };
+      const txt = sentence([`most ${P} are ${Q}`, `all ${Q} are ${R}`, `therefore most ${P} are ${R}`]);
+      return { premise:txt, signature:sig(21,'most P Q; all Q R => most P R') };
     },
 
     // 22 Percent versus number integrity
     22(){
       const [S] = pickLetters(1);
-      const p = sentence([`group one shows a higher percent ${S}`, `group two is much larger`, `no count claim follows from rate alone`]);
-      return { premise:p, signature:sig(22,'rate != count') };
+      const txt = sentence([`group one shows a higher percent ${S}`, `group two is much larger`, `no count claim follows from rate alone`]);
+      return { premise:txt, signature:sig(22,'rate != count') };
     },
 
     // 23 Simpson reversal
     23(){
       const [A,B] = pickLetters(2);
-      const p = sentence([`${A} beats ${B} within each stratum`, `strata weights skew`, `overall order can flip`]);
-      return { premise:p, signature:sig(23,'Simpson reversal') };
+      const txt = sentence([`${A} beats ${B} within each stratum`, `strata weights skew`, `overall order can flip`]);
+      return { premise:txt, signature:sig(23,'Simpson reversal') };
     },
 
     // 24 Regression to the mean
     24(){
       const [W] = pickLetters(1);
-      const p = sentence([`extreme ${W} at time one`, `process is stable`, `expect moderation at time two`]);
-      return { premise:p, signature:sig(24,'regress to mean') };
+      const txt = sentence([`extreme ${W} at time one`, `process is stable`, `expect moderation at time two`]);
+      return { premise:txt, signature:sig(24,'regress to mean') };
     },
 
     // 25 Numeric tightening with min and max
     25(){
       const [X,Y,Z] = pickLetters(3);
-      const p = sentence([`exactly three ${X}`, `at least two ${Y} are ${X}`, `at most one ${Z} is ${X}`]);
-      return { premise:p, signature:sig(25,'=3 X; >=2 Y in X; <=1 Z in X') };
+      const txt = sentence([`exactly three ${X}`, `at least two ${Y} are ${X}`, `at most one ${Z} is ${X}`]);
+      return { premise:txt, signature:sig(25,'=3 X; >=2 Y in X; <=1 Z in X') };
     },
 
     // 26 Distribution bounds in sequencing
     26(){
       const [A,B,C,D,E] = pickLetters(5);
-      const p = sentence([`fixed positions`, `${A} before ${B}`, `${C} not adjacent to ${A}`, `exactly two between ${D} and ${E}`]);
-      return { premise:p, signature:sig(26,'seq constraints') };
+      const txt = sentence([`fixed positions`, `${A} before ${B}`, `${C} not adjacent to ${A}`, `exactly two between ${D} and ${E}`]);
+      return { premise:txt, signature:sig(26,'seq constraints') };
     },
 
     // 27 Must-be-true diagnostic
     27(){
       const [A,B,C] = pickLetters(3);
-      const p = sentence([`${choice(IF)} ${A} ${choice(THEN)} ${B}`, `${choice(IF)} ${B} ${choice(THEN)} ${C}`, `${A} ${present()}`]);
-      return { premise:p, signature:sig(27,'A->B->C; A') };
+      const txt = sentence([`${choice(IF)} ${A} ${choice(THEN)} ${B}`, `${choice(IF)} ${B} ${choice(THEN)} ${C}`, `${A} ${present()}`]);
+      return { premise:txt, signature:sig(27,'A->B->C; A') };
     },
 
     // 28 Could-be-true diagnostic
     28(){
       const [D,E] = pickLetters(2);
-      const p = sentence([`${choice(IF)} ${D} ${choice(THEN)} ${E}`, `${NOT[0]} ${D}`, `${E} remains undetermined and could be true`]);
-      return { premise:p, signature:sig(28,'D->E; not D => E ?') };
+      const txt = sentence([`${choice(IF)} ${D} ${choice(THEN)} ${E}`, `${NOT[0]} ${D}`, `${E} remains undetermined and could be true`]);
+      return { premise:txt, signature:sig(28,'D->E; not D => E ?') };
     },
 
     // 29 Must-be-false diagnostic
     29(){
       const [G,H] = pickLetters(2);
-      const p = sentence([`not both ${G} and ${H}`, `${H} ${present()}`, `therefore ${G} must be false`]);
-      return { premise:p, signature:sig(29,'not(G&H); H => not G') };
+      const txt = sentence([`not both ${G} and ${H}`, `${H} ${present()}`, `therefore ${G} must be false`]);
+      return { premise:txt, signature:sig(29,'not(G&H); H => not G') };
     },
 
     // 30 Necessary assumption detection
     30(){
       const [R,S,T] = pickLetters(3);
-      const p = sentence([`${R} supports ${S}`, `a hidden bridge from ${T} is required`, `negate the bridge and support collapses`]);
-      return { premise:p, signature:sig(30,'negate bridge -> collapse') };
+      const txt = sentence([`${R} supports ${S}`, `a hidden bridge from ${T} is required`, `negate the bridge and support collapses`]);
+      return { premise:txt, signature:sig(30,'negate bridge -> collapse') };
     },
 
     // 31 Sufficient assumption closure
     31(){
       const [U,V,W] = pickLetters(3);
-      const p = sentence([`${U} near ${V}`, `we want ${U} implies ${W}`, `known ${V} implies ${W}`, `add ${U} implies ${V}`]);
-      return { premise:p, signature:sig(31,'add U->V to get U->W') };
+      const txt = sentence([`${U} near ${V}`, `we want ${U} implies ${W}`, `known ${V} implies ${W}`, `add ${U} implies ${V}`]);
+      return { premise:txt, signature:sig(31,'add U->V to get U->W') };
     },
 
     // 32 Exception precedence
     32(){
       const [A,B,C] = pickLetters(3);
-      const p = sentence([`all ${A} are ${B} unless ${C}`, `${C} holds`, `${A} holds`, `result: not necessarily ${B}`]);
-      return { premise:p, signature:sig(32,'exception overrides rule') };
+      const txt = sentence([`all ${A} are ${B} unless ${C}`, `${C} holds`, `${A} holds`, `result: not necessarily ${B}`]);
+      return { premise:txt, signature:sig(32,'exception overrides rule') };
     },
 
     // 33 Reductio ad absurdum
     33(){
       const [D,E] = pickLetters(2);
-      const p = sentence([`assume ${D}`, `derive ${E} and not ${E} under fixed rules`, `therefore not ${D}`]);
-      return { premise:p, signature:sig(33,'assume -> contradiction') };
+      const txt = sentence([`assume ${D}`, `derive ${E} and not ${E} under fixed rules`, `therefore not ${D}`]);
+      return { premise:txt, signature:sig(33,'assume -> contradiction') };
     },
 
     // 34 Local conditional worlds
     34(){
       const [E,F,G] = pickLetters(3);
-      const p = sentence([`if ${E} then ${F}`, `if ${F} then ${G}`, `suppose ${E} in a local world`, `so ${G} in the ${E}-world`]);
-      return { premise:p, signature:sig(34,'world reasoning chain') };
+      const txt = sentence([`if ${E} then ${F}`, `if ${F} then ${G}`, `suppose ${E} in a local world`, `so ${G} in the ${E}-world`]);
+      return { premise:txt, signature:sig(34,'world reasoning chain') };
     },
 
     // 35 Dominance elimination
     35(){
-      const p = sentence([`answer one implies answer two under all rules`, `discard dominated option`, `keep only non‑dominated`]);
-      return { premise:p, signature:sig(35,'dominance') };
+      const txt = sentence([`answer one implies answer two under all rules`, `discard dominated option`, `keep only non‑dominated`]);
+      return { premise:txt, signature:sig(35,'dominance') };
     },
 
     // 36 Out-of-scope detection
     36(){
       const [H,J] = pickLetters(2);
-      const p = sentence([`evidence on ${H}`, `conclusion on unrelated ${J}`, `scope error: missing link`]);
-      return { premise:p, signature:sig(36,'scope mismatch') };
+      const txt = sentence([`evidence on ${H}`, `conclusion on unrelated ${J}`, `scope error: missing link`]);
+      return { premise:txt, signature:sig(36,'scope mismatch') };
     },
 
     // 37 Role labeling for argument flow
     37(){
       const [K,L,M,N] = pickLetters(4);
-      const p = sentence([`${K} supports ${L}`, `${M} rebuts ${K}`, `${N} concludes`, `track net toward ${N}`]);
-      return { premise:p, signature:sig(37,'roles flow') };
+      const txt = sentence([`${K} supports ${L}`, `${M} rebuts ${K}`, `${N} concludes`, `track net toward ${N}`]);
+      return { premise:txt, signature:sig(37,'roles flow') };
     },
 
     // 38 Author versus source viewpoint
     38(){
       const [R] = pickLetters(1);
-      const p = sentence([`author reports: experts say ${R}`, `author rejects ${R}`, `author not committed to ${R}`]);
-      return { premise:p, signature:sig(38,'report vs endorse') };
+      const txt = sentence([`author reports: experts say ${R}`, `author rejects ${R}`, `author not committed to ${R}`]);
+      return { premise:txt, signature:sig(38,'report vs endorse') };
     },
 
     // 39 Graph reachability with mandatory gate
     39(){
       const [A,B,C,D] = pickLetters(4);
-      const p = sentence([`${A} connects to ${B}`, `${B} connects to ${C}`, `all paths must pass ${D}`, `${B} avoids ${D}`, `there is no ${A} to ${C} path under the gate`]);
-      return { premise:p, signature:sig(39,'must-pass gate blocks path') };
+      const txt = sentence([`${A} connects to ${B}`, `${B} connects to ${C}`, `all paths must pass ${D}`, `${B} avoids ${D}`, `there is no ${A} to ${C} path under the gate`]);
+      return { premise:txt, signature:sig(39,'must-pass gate blocks path') };
     },
 
     // 40 Minimal cut-set identification
     40(){
       const [A,B,C,D] = pickLetters(4);
-      const p = sentence([`routes from ${A} to ${C} use ${B} or ${D}`, `removing both disconnects`, `removing singles does not`, `the set {${B}, ${D}} is minimal`]);
-      return { premise:p, signature:sig(40,'minimal cut {B,D}') };
+      const txt = sentence([`routes from ${A} to ${C} use ${B} or ${D}`, `removing both disconnects`, `removing singles does not`, `the set {${B}, ${D}} is minimal`]);
+      return { premise:txt, signature:sig(40,'minimal cut {B,D}') };
     },
 
     // 41 Parity invariant under swaps
     41(){
-      const p = sentence([`only adjacent swaps allowed`, `initial inversion parity fixed`, `each swap flips parity`, `even flips keep the class`, `unreachable targets flagged`]);
-      return { premise:p, signature:sig(41,'parity invariant') };
+      const txt = sentence([`only adjacent swaps allowed`, `initial inversion parity fixed`, `each swap flips parity`, `even flips keep the class`, `unreachable targets flagged`]);
+      return { premise:txt, signature:sig(41,'parity invariant') };
     },
 
     // 42 Conservation invariant on totals
     42(){
       const [X,Y] = pickLetters(2);
-      const p = sentence([`move adds one to ${X} and subtracts one from ${Y}`, `total fixed`, `target raises total and is unreachable`]);
-      return { premise:p, signature:sig(42,'conserved sum') };
+      const txt = sentence([`move adds one to ${X} and subtracts one from ${Y}`, `total fixed`, `target raises total and is unreachable`]);
+      return { premise:txt, signature:sig(42,'conserved sum') };
     },
 
     // 43 Conditional probability inversion check
     43(){
       const [R,S] = pickLetters(2);
-      const p = sentence([`many ${R} overall`, `few show ${S}`, `most ${S} are ${R}`, `do not equate chance of ${R} given ${S} with chance of ${S} given ${R}`]);
-      return { premise:p, signature:sig(43,'P(R|S) != P(S|R)') };
+      const txt = sentence([`many ${R} overall`, `few show ${S}`, `most ${S} are ${R}`, `do not equate chance of ${R} given ${S} with chance of ${S} given ${R}`]);
+      return { premise:txt, signature:sig(43,'P(R|S) != P(S|R)') };
     },
 
     // 44 Likelihood‑ratio aggregation
     44(){
-      const p = sentence([`two independent signals with stated strength`, `neutral prior`, `combine strengths multiplicatively in odds space`, `posterior tilts by product size`]);
-      return { premise:p, signature:sig(44,'LR multiply') };
+      const txt = sentence([`two independent signals with stated strength`, `neutral prior`, `combine strengths multiplicatively in odds space`, `posterior tilts by product size`]);
+      return { premise:txt, signature:sig(44,'LR multiply') };
     },
 
     // 45 Independence versus exclusivity
     45(){
       const [A,B] = pickLetters(2);
-      const p = sentence([`events ${A} and ${B} cannot co‑occur`, `claim independence`, `independence holds only in trivial boundary cases`]);
-      return { premise:p, signature:sig(45,'exclusive != independent') };
+      const txt = sentence([`events ${A} and ${B} cannot co‑occur`, `claim independence`, `independence holds only in trivial boundary cases`]);
+      return { premise:txt, signature:sig(45,'exclusive != independent') };
     },
 
     // 46 Symmetric‑difference algebra
     46(){
       const [A,B,C] = pickLetters(3);
-      const p = sentence([`${A} differs from ${B} to give ${C}`, `${C} differs from ${B} returns ${A}`]);
-      return { premise:p, signature:sig(46,'(A⊕B)⊕B=A (verbal)') };
+      const txt = sentence([`${A} differs from ${B} to give ${C}`, `${C} differs from ${B} returns ${A}`]);
+      return { premise:txt, signature:sig(46,'(A⊕B)⊕B=A (verbal)') };
     },
 
     // 47 Partial‑order tests
     47(){
       const [a,b,c,d] = pickLetters(4);
-      const p = sentence([`relation is reflexive and transitive`, `some pair ${a}, ${b} incomparable`, `some pair ${c}, ${d} two‑way comparable so equal`, `partial not total; enforce antisymmetry`]);
-      return { premise:p, signature:sig(47,'poset checks') };
+      const txt = sentence([`relation is reflexive and transitive`, `some pair ${a}, ${b} incomparable`, `some pair ${c}, ${d} two‑way comparable so equal`, `partial not total; enforce antisymmetry`]);
+      return { premise:txt, signature:sig(47,'poset checks') };
     },
 
     // 48 Minimal hitting‑set for violations
     48(){
       const [X,Y,Z] = pickLetters(3);
-      const p = sentence([`blockers are any two among three clauses ${X} or ${Y}, ${Y} or ${Z}, ${Z} or ${X}`, `any two‑flag set is minimal`]);
-      return { premise:p, signature:sig(48,'hitting set size 2') };
+      const txt = sentence([`blockers are any two among three clauses ${X} or ${Y}, ${Y} or ${Z}, ${Z} or ${X}`, `any two‑flag set is minimal`]);
+      return { premise:txt, signature:sig(48,'hitting set size 2') };
     },
 
     // 49 Equivalence‑relation partitions
     49(){
-      const [E,p] = pickLetters(2);
-      const ptxt = sentence([`relation is reflexive, symmetric, and transitive`, `class contains ${p}`, `close under relation and separate classes`, `partition by classes`]);
-      return { premise: ptxt, signature:sig(49,'equivalence partitions') };
+      const [E,pt] = pickLetters(2); // avoid 'p' binding
+      const txt = sentence([
+        `relation is reflexive, symmetric, and transitive`,
+        `class contains ${pt}`,
+        `close under relation and separate classes`,
+        `partition by classes`
+      ]);
+      return { premise: txt, signature:sig(49,'equivalence partitions') };
     },
 
     // 50 Transitive reduction versus closure
     50(){
       const [A,B,C] = pickLetters(3);
-      const p = sentence([`${A} before ${B}`, `${B} before ${C}`, `${A} before ${C} also listed`, `minimal edges preserve reachability by removing the long edge`]);
-      return { premise:p, signature:sig(50,'closure vs reduction') };
+      const txt = sentence([`${A} before ${B}`, `${B} before ${C}`, `${A} before ${C} also listed`, `minimal edges preserve reachability by removing the long edge`]);
+      return { premise:txt, signature:sig(50,'closure vs reduction') };
     },
 
     // 51 Minimal countermodel construction
     51(){
       const [D,E] = pickLetters(2);
-      const p = sentence([`claim all ${D} imply ${E}`, `find ${D} true and ${E} false without breaking rules`, `the universal claim is refuted`]);
-      return { premise:p, signature:sig(51,'countermodel') };
+      const txt = sentence([`claim all ${D} imply ${E}`, `find ${D} true and ${E} false without breaking rules`, `the universal claim is refuted`]);
+      return { premise:txt, signature:sig(51,'countermodel') };
     },
 
     // 52 Inclusion–exclusion bounds
     52(){
       const [F,G] = pickLetters(2);
-      const p = sentence([`sizes of ${F}, ${G}, and their union known`, `compute overlap as sum minus union`, `bound by zero and minima`]);
-      return { premise:p, signature:sig(52,'|F|+|G|-|F∪G| verbal') };
+      const txt = sentence([`sizes of ${F}, ${G}, and their union known`, `compute overlap as sum minus union`, `bound by zero and minima`]);
+      return { premise:txt, signature:sig(52,'|F|+|G|-|F∪G| verbal') };
     },
 
     // 53 Conditional independence via mediation
     53(){
       const [A,B,C] = pickLetters(3);
-      const p = sentence([`${A} causes ${B}`, `${B} causes ${C}`, `no other links`, `condition on ${B} to block the path, making ${A} independent of ${C}`]);
-      return { premise:p, signature:sig(53,'A->B->C, cond on B') };
+      const txt = sentence([`${A} causes ${B}`, `${B} causes ${C}`, `no other links`, `condition on ${B} to block the path, making ${A} independent of ${C}`]);
+      return { premise:txt, signature:sig(53,'A->B->C, cond on B') };
     },
 
     // 54 Exchange argument for optimality
     54(){
       const [X,Y] = pickLetters(2);
-      const p = sentence([`current choice ${X} heavy`, `feasible lighter alternative ${Y} improves value`, `swap to improve while feasible`, `justifies greedy step`]);
-      return { premise:p, signature:sig(54,'exchange improves') };
+      const txt = sentence([`current choice ${X} heavy`, `feasible lighter alternative ${Y} improves value`, `swap to improve while feasible`, `justifies greedy step`]);
+      return { premise:txt, signature:sig(54,'exchange improves') };
     },
 
     // 55 Matching and cover duality in bipartite graphs
     55(){
-      const p = sentence([`size of best pairing equals size of smallest blocker set`, `build alternating paths to certify equality`]);
-      return { premise:p, signature:sig(55,'Kőnig duality verbal') };
+      const txt = sentence([`size of best pairing equals size of smallest blocker set`, `build alternating paths to certify equality`]);
+      return { premise:txt, signature:sig(55,'Kőnig duality verbal') };
     },
 
     // 56 Submodularity, diminishing returns
     56(){
       const [Z] = pickLetters(1);
-      const p = sentence([`adding ${Z} to a small set helps more than to a big set`, `compare marginal gains`, `objective is submodular`]);
-      return { premise:p, signature:sig(56,'diminishing returns') };
+      const txt = sentence([`adding ${Z} to a small set helps more than to a big set`, `compare marginal gains`, `objective is submodular`]);
+      return { premise:txt, signature:sig(56,'diminishing returns') };
     },
 
     // 57 Max‑flow equals min‑cut certification
     57(){
-      const p = sentence([`all routes cross certain gates`, `a built flow saturates them`, `every path crosses the cut`, `value matches capacity`]);
-      return { premise:p, signature:sig(57,'maxflow=mincut verbal') };
+      const txt = sentence([`all routes cross certain gates`, `a built flow saturates them`, `every path crosses the cut`, `value matches capacity`]);
+      return { premise:txt, signature:sig(57,'maxflow=mincut verbal') };
     },
 
     // 58 Adversarial minimax bound
     58(){
-      const p = sentence([`planner picks strategy`, `challenger picks case`, `score is worst case`, `adopt the strategy with larger worst case`]);
-      return { premise:p, signature:sig(58,'minimax') };
+      const txt = sentence([`planner picks strategy`, `challenger picks case`, `score is worst case`, `adopt the strategy with larger worst case`]);
+      return { premise:txt, signature:sig(58,'minimax') };
     },
 
     // 59 Inductive ladder with guarded step
     59(){
       const [K,L] = pickLetters(2);
-      const p = sentence([`base ${K} holds`, `${K} at level n gives ${L} at level n`, `${L} at level n gives ${K} at level n plus one`, `therefore ${K} holds for every level`]);
-      return { premise:p, signature:sig(59,'induction by two‑step') };
+      const txt = sentence([`base ${K} holds`, `${K} at level n gives ${L} at level n`, `${L} at level n gives ${K} at level n plus one`, `therefore ${K} holds for every level`]);
+      return { premise:txt, signature:sig(59,'induction by two‑step') };
     },
 
     // 60 Augmenting path certification
     60(){
-      const p = sentence([`current pairing not maximum if an alternating path starts and ends unmatched`, `flip along the path to increase pairs`]);
-      return { premise:p, signature:sig(60,'augmenting path') };
+      const txt = sentence([`current pairing not maximum if an alternating path starts and ends unmatched`, `flip along the path to increase pairs`]);
+      return { premise:txt, signature:sig(60,'augmenting path') };
     },
 
     // 61 Extremal element method
     61(){
       const [P] = pickLetters(1);
-      const p = sentence([`choose arrangement with smallest cost under rule ${P}`, `any violation allows a cheaper fix`, `therefore the arrangement satisfies all rules`]);
-      return { premise:p, signature:sig(61,'extremal argument') };
+      const txt = sentence([`choose arrangement with smallest cost under rule ${P}`, `any violation allows a cheaper fix`, `therefore the arrangement satisfies all rules`]);
+      return { premise:txt, signature:sig(61,'extremal argument') };
     },
 
     // 62 Bijection and inversion
     62(){
-      const p = sentence([`mapping is one‑to‑one and onto between two sets`, `build the inverse`, `test injective and surjective parts`, `composition recovers inputs uniquely`]);
-      return { premise:p, signature:sig(62,'bijection inverse') };
+      const txt = sentence([`mapping is one‑to‑one and onto between two sets`, `build the inverse`, `test injective and surjective parts`, `composition recovers inputs uniquely`]);
+      return { premise:txt, signature:sig(62,'bijection inverse') };
     },
   };
 
@@ -745,7 +750,9 @@
       }, state.sec*1000);
     } catch(err){
       console.error('present() error:', err);
-      logLine('ERROR: '+err.message);
+      const msg = 'ERROR: ' + (err && err.message ? err.message : String(err));
+      $('#status').textContent = msg;
+      logLine(msg);
       stopSession();
     }
   }
@@ -762,12 +769,21 @@
   }
 
   function startSession(){
-    state.running = true; state.i=0; state.score=0; state.hits=0; state.resp=0; state.omissions=0; state.history=[]; state.guard.clear();
-    state.schedule = buildSchedule(state.n, state.trials, state.matchRate);
-    $('#btnMatch').disabled = true; $('#btnNoMatch').disabled = true;
-    $('#status').textContent = 'Running…'; $('#premise').textContent = '—';
-    present();
-    $('#start').disabled = true; $('#stop').disabled = false;
+    try{
+      state.running = true;
+      state.i=0; state.score=0; state.hits=0; state.resp=0; state.omissions=0; state.history=[]; state.guard.clear();
+      state.schedule = buildSchedule(state.n, state.trials, state.matchRate);
+      $('#btnMatch').disabled = true; $('#btnNoMatch').disabled = true;
+      $('#status').textContent = 'Running…'; $('#premise').textContent = '—';
+      present();
+      $('#start').disabled = true; $('#stop').disabled = false;
+    } catch(err){
+      console.error('startSession() error:', err);
+      $('#status').textContent = 'ERROR starting: ' + err.message;
+      logLine('ERROR start: ' + err.message);
+      state.running = false;
+      $('#start').disabled = false; $('#stop').disabled = true;
+    }
   }
   function stopSession(){ state.running=false; clearTimeout(state.timer); $('#status').textContent='Stopped.'; $('#btnMatch').disabled=true; $('#btnNoMatch').disabled=true; $('#start').disabled=false; $('#stop').disabled=true }
 
