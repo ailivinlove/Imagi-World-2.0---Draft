@@ -156,16 +156,26 @@
 
 <script>
 function extractPremiseLines(rawListOrSelector){
+  // Always target only the text span, never the container
+  const SEL = '#premiseDisplay .premise-text, #premise-display .premise-text';
   let texts;
   if (Array.isArray(rawListOrSelector)) {
     texts = rawListOrSelector.slice();
   } else {
-    const sel = rawListOrSelector || '#premiseDisplay .premise-text, #premise-display .premise-text, #premiseDisplay, #premise-display';
+    const sel = rawListOrSelector || SEL;
     texts = Array.from(document.querySelectorAll(sel))
-      .map(el => (el.textContent || '').trim())
+      .map(el => (el.textContent || ''))
       .filter(Boolean);
   }
-  return texts.map(s => s.replace(/\s+/g, ' ').trim());
+  // Normalize whitespace and HARD-STRIP any numbering or "Item N" prefixes
+  return texts.map(s => String(s)
+    .replace(/\s+/g, ' ')
+    // remove “Item 1: ”, “Item 1.”, etc.
+    .replace(/^\s*Item\s*\d+\s*[:.)-]\s*/i, '')
+    // remove “1.”, “1)”, “(1)”, “#1”, “1 - ” at start
+    .replace(/^\s*(?:\d+\s*[.)-]\s*|\(\d+\)\s*|#\d+\s*|\d+\.\s*)/, '')
+    .trim()
+  ).filter(Boolean);
 }
 
 (function(){
@@ -1285,10 +1295,10 @@ function extractPremiseLines(rawListOrSelector){
     });
 
     if (window.ImagiVoice && typeof ImagiVoice.speakPremiseList === 'function') {
-      const lines = extractPremiseLines('#premiseDisplay .premise-text, #premiseDisplay');
+      // build TTS lines using only the text spans
+      const lines = extractPremiseLines('#premiseDisplay .premise-text, #premise-display .premise-text');
       console.debug('TTS lines =', lines);
-      console.assert(!lines.some(s=>/^Item\s*\d+/i.test(s)), 'Numbered lines detected in TTS payload');
-      ImagiVoice.speakPremiseList(lines);
+      ImagiVoice.speakPremiseList(lines); // pass the array directly
     }
     
     // Update status
