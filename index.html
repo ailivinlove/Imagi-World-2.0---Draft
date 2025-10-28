@@ -176,6 +176,8 @@ function extractPremiseLines(rawListOrSelector){
     .replace(/^\s*(?:\d+\s*[.)-]\s*|\(\d+\)\s*|#\d+\s*|\d+\.\s*)/, '')
     // strip any remaining numerals entirely for TTS safety
     .replace(/[\d\u2070-\u2079\u2080-\u2089]+/g, '')
+    // strip common number words so speech never voices them
+    .replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)\b/gi, '')
     .trim()
   ).filter(Boolean);
 }
@@ -236,6 +238,7 @@ function extractPremiseLines(rawListOrSelector){
       .replace(/^\s*Item\s*\d+\s*[:.)-]\s*/i, '')
       .replace(/^\s*(?:\d+\s*[.)-]\s*|\(\d+\)\s*|#\d+\s*|\d+\.\s*)/, '')
       .replace(/[\d\u2070-\u2079\u2080-\u2089]+/g, '')
+      .replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)\b/gi, '')
       .replace(/\s+/g, ' ')
       .trim();
   }
