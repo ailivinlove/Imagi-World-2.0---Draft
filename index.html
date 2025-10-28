@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Imagi‑World 2.0 — Single Modality</title>
+<title>Imagi-World 2.0 — Complete 62 Reasoning Types</title>
 <style>
   :root{
     --bg:#0b132b;--panel:#1c2541;--ink:#e0e6f3;--accent:#5bc0be;--warn:#ff6b6b;--ok:#2ecc71;--muted:#94a3b8
@@ -12,12 +12,13 @@
   body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}
   header{padding:20px 16px;text-align:center;border-bottom:1px solid #223}
   h1{margin:0;font-size:clamp(20px,3vw,28px)}
-  .wrap{max-width:1060px;margin:0 auto;padding:16px}
+  .wrap{max-width:1200px;margin:0 auto;padding:16px}
   .grid{display:grid;grid-template-columns:1fr;gap:16px}
-  @media(min-width:880px){.grid{grid-template-columns:320px 1fr}}
+  @media(min-width:880px){.grid{grid-template-columns:360px 1fr}}
   .card{background:var(--panel);border:1px solid #2a335a;border-radius:12px;box-shadow:0 6px 16px rgba(0,0,0,.25)}
   .pad{padding:16px}
-  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0}
+  label{display:block;margin:8px 0 4px}
   label span{color:var(--muted);font-size:.9rem}
   input[type=range]{width:100%}
   input[type=number]{width:96px;padding:8px;border-radius:8px;border:1px solid #334;background:#0f1835;color:var(--ink)}
@@ -26,95 +27,105 @@
   .btn.secondary{background:#324063;color:#cbd5e1}
   .btn.danger{background:#c0392b;color:white}
   .btn.ghost{background:transparent;border:1px solid #3a466b;color:#cbd5e1}
-  .status{font-size:1.15rem;margin:.5rem 0 0;color:#cbd5e1;min-height:1.6lh}
-  .premise{font-size:1.45rem;line-height:1.45;min-height:3.2lh;margin:8px 0 0;font-style:italic}
-  .bigbtns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+  .status{font-size:1.1rem;margin:.5rem 0;color:#cbd5e1;min-height:2em}
+  .premise-container{background:#0d1736;border:1px solid #334;border-radius:10px;padding:12px;margin:12px 0;min-height:120px}
+  .premise{font-size:1.3rem;line-height:1.5;margin:6px 0;color:#e0e6f3}
+  .premise-number{color:var(--accent);font-weight:bold;margin-right:8px}
+  .bigbtns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
   .bigbtns button{padding:18px 16px;font-size:1.2rem}
   .bigbtns .yes{background:var(--ok);color:#052b16}
   .bigbtns .no{background:var(--warn);color:#2b0505}
-  .stats{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:10px;margin-top:12px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:12px}
   .stat{background:#0d1736;border:1px solid #223;border-radius:10px;padding:10px;text-align:center}
-  .kpi{font-size:1.6rem;font-weight:800;color:var(--accent)}
-  .log{max-height:260px;overflow:auto;background:#081026;border:1px dashed #2a335a;border-radius:10px;padding:10px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.92rem}
-  details{background:#101a39;border-radius:10px}
+  .kpi{font-size:1.5rem;font-weight:800;color:var(--accent)}
+  .log{max-height:300px;overflow:auto;background:#081026;border:1px dashed #2a335a;border-radius:10px;padding:10px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.9rem}
+  details{background:#101a39;border-radius:10px;margin-top:10px}
   summary{cursor:pointer;padding:10px 12px;border-bottom:1px solid #202a56}
   .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.92rem}
+  .timer-bar{height:6px;background:#223;border-radius:3px;margin:10px 0;position:relative;overflow:hidden}
+  .timer-progress{height:100%;background:var(--accent);width:100%;transition:width linear}
 </style>
 </head>
 <body>
   <header>
-    <h1>Imagi‑World 2.0 · Single‑Modality Stream of 62 Reasoning Types</h1>
-    <p class="mono">Default mode only. Premises autogenerate across all 62 types. No pasting required.</p>
+    <h1>Imagi-World 2.0 · Complete 62 Reasoning Types</h1>
+    <p class="mono">Novel premises generated across all 62 logical reasoning patterns. N-back matching based on logical structure.</p>
   </header>
   <div class="wrap">
     <div class="grid">
       <section class="card pad" aria-label="controls">
-        <h2 style="margin-top:0">Session Controls</h2>
+        <h2 style="margin-top:0">Session Configuration</h2>
+        
+        <label for="nback">N-Back Level <span id="nbackV">2</span></label>
+        <input id="nback" type="range" min="1" max="5" step="1" value="2" />
+
+        <label for="sec">Seconds per Trial <span id="secV">10</span></label>
         <div class="row">
-          <label for="nback">N‑Back Level <span id="nbackV">1</span></label>
+          <input id="sec" type="range" min="3" max="30" step="0.5" value="10" />
+          <input id="secNum" type="number" min="3" max="30" step="0.5" value="10" />
         </div>
-        <input id="nback" type="range" min="1" max="5" step="1" value="1" />
 
-        <div class="row" style="margin-top:10px">
-          <label for="sec">Seconds per trial <span id="secV">8</span></label>
-        </div>
+        <label for="premises">Premises per Trial <span id="premisesV">1</span></label>
         <div class="row">
-          <input id="sec" type="range" min="2" max="20" step="0.5" value="8" />
-          <input id="secNum" type="number" min="2" max="20" step="0.5" value="8" />
+          <input id="premises" type="range" min="1" max="5" step="1" value="1" />
+          <input id="premisesNum" type="number" min="1" max="5" step="1" value="1" />
         </div>
 
-        <div class="row" style="margin-top:10px">
-          <label for="trials">Trials per session <span id="trialsV">40</span></label>
-        </div>
+        <label for="trials">Trials per Session <span id="trialsV">30</span></label>
         <div class="row">
-          <input id="trials" type="range" min="4" max="1000" step="1" value="40" />
-          <input id="trialsNum" type="number" min="4" max="10000" step="1" value="40" />
+          <input id="trials" type="range" min="5" max="100" step="1" value="30" />
+          <input id="trialsNum" type="number" min="5" max="1000" step="1" value="30" />
         </div>
 
-        <div class="row" style="margin-top:10px">
-          <label for="matchRate">Target match rate % <span id="matchRateV">30</span></label>
-        </div>
-        <input id="matchRate" type="range" min="5" max="80" step="1" value="30" />
+        <label for="matchRate">Target Match Rate % <span id="matchRateV">25</span></label>
+        <input id="matchRate" type="range" min="10" max="50" step="5" value="25" />
 
-        <div class="row" style="margin-top:12px">
-          <button id="start" class="btn">Start</button>
-          <button id="stop" class="btn danger" disabled>Stop</button>
+        <div class="row" style="margin-top:16px">
+          <button id="start" class="btn">START</button>
+          <button id="stop" class="btn danger" disabled>STOP</button>
           <button id="reset" class="btn secondary">Reset Stats</button>
-          <button id="download" class="btn ghost">Export Log</button>
+        </div>
+        <div class="row">
+          <button id="download" class="btn ghost">Export Session Log</button>
         </div>
       </section>
 
       <section class="card pad" aria-live="polite">
-        <div class="status" id="status">Ready.</div>
-        <div class="premise" id="premise">—</div>
+        <div class="status" id="status">Ready to begin. Press START to generate premises.</div>
+        <div class="timer-bar"><div class="timer-progress" id="timerBar"></div></div>
+        <div class="premise-container" id="premiseContainer">
+          <div class="premise" id="premise">Premises will appear here...</div>
+        </div>
         <div class="bigbtns">
-          <button id="btnMatch" class="yes" disabled>Match</button>
-          <button id="btnNoMatch" class="no" disabled>No Match</button>
+          <button id="btnMatch" class="yes" disabled>MATCH</button>
+          <button id="btnNoMatch" class="no" disabled>NO MATCH</button>
         </div>
         <div class="stats">
           <div class="stat"><div>Trial</div><div class="kpi" id="kTrial">0</div></div>
           <div class="stat"><div>Score</div><div class="kpi" id="kScore">0</div></div>
           <div class="stat"><div>Accuracy</div><div class="kpi" id="kAcc">—</div></div>
-          <div class="stat"><div>Omissions</div><div class="kpi" id="kMiss">0</div></div>
-          <div class="stat"><div>Matches scheduled</div><div class="kpi" id="kSched">0</div></div>
+          <div class="stat"><div>Hits</div><div class="kpi" id="kHits">0</div></div>
+          <div class="stat"><div>Misses</div><div class="kpi" id="kMisses">0</div></div>
+          <div class="stat"><div>Omissions</div><div class="kpi" id="kOmit">0</div></div>
         </div>
       </section>
     </div>
 
-    <section class="card pad" style="margin-top:16px">
+    <section class="card pad">
       <details open>
-        <summary><strong>How matching works (single modality)</strong></summary>
+        <summary><strong>How N-Back Logical Matching Works</strong></summary>
         <div class="pad">
-          <p>Each trial is a <em>novel</em> premise sentence that encodes one of 62 reasoning types. A trial matches at level <span class="mono">n</span> if its hidden signature equals the signature from <span class="mono">n</span> trials earlier after allowed inversions for that type. Matching is never based on string equality.</p>
+          <p>Each trial presents one or more premises based on the 62 reasoning types. An n-back match occurs when the <strong>logical structure</strong> of the current trial matches the structure from n trials ago, NOT when premises are repeated.</p>
           <ul>
-            <li>No symbols. Only words and letters in the premise.</li>
-            <li>Premises are never repeated. A de‑duplication set enforces uniqueness.</li>
-            <li>Type selection is random across all 62, while meeting the target match rate.</li>
+            <li><strong>Novel premises only:</strong> Every premise is completely unique - never repeated</li>
+            <li><strong>Logical matching:</strong> Matches are based on reasoning patterns (e.g., modus ponens, contraposition)</li>
+            <li><strong>62 reasoning types:</strong> Including circularity, modus ponens, tollens, syllogisms, bijections, etc.</li>
+            <li><strong>Customizable:</strong> Adjust trial time and premises per trial for difficulty</li>
           </ul>
         </div>
       </details>
       <details>
-        <summary><strong>Debug</strong></summary>
+        <summary><strong>Session Log</strong></summary>
         <div class="pad">
           <div id="log" class="log" aria-live="polite"></div>
         </div>
@@ -124,706 +135,1185 @@
 
 <script>
 (function(){
-  // ---------- utilities ----------
+  // Core utilities
   const $ = sel => document.querySelector(sel);
-  const rand = (a,b)=> Math.floor(Math.random()*(b-a+1))+a;
-  const choice = arr => arr[rand(0,arr.length-1)];
-  const shuffle = arr => { for(let i=arr.length-1;i>0;i--){ const j=rand(0,i); [arr[i],arr[j]]=[arr[j],arr[i]] } return arr }
-  const sample = (arr,k)=> shuffle([...arr]).slice(0,k);
-  const lettersPool = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  function freshLetters(k, used = new Set()){
-    // pick k distinct letters not in used; if exhausted, recycle after clearing
-    const avail = [...lettersPool].filter(c=>!used.has(c));
-    if(avail.length < k){ used.clear(); return freshLetters(k, used) }
-    const pick = sample(avail,k); pick.forEach(c=>used.add(c));
-    return pick;
+  const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+  const choice = arr => arr[rand(0, arr.length - 1)];
+  const shuffle = arr => {
+    const copy = [...arr];
+    for(let i = copy.length - 1; i > 0; i--) {
+      const j = rand(0, i);
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  };
+  const sample = (arr, k) => shuffle([...arr]).slice(0, k);
+
+  // Premise generation helpers
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const usedPremises = new Set();
+  let letterIndex = 0;
+
+  function getNextLetters(count) {
+    const result = [];
+    for(let i = 0; i < count; i++) {
+      result.push(letters[letterIndex % 26]);
+      letterIndex++;
+    }
+    return result;
   }
-  function sentence(parts){
-    // join with proper punctuation
-    let s = parts.join('; ').replace(/\s+/g,' ').trim();
-    if(!/[.!?]$/.test(s)) s += '.';
-    return s;
-  }
 
-  // ---------- signature helpers ----------
-  // A signature codes the reasoning type and a normalized structure mask.
-  function sig(typeId, mask){ return `${typeId}|${mask}` }
+  // Logical connectives variations
+  const IF_VARIANTS = ['If', 'When', 'Whenever', 'Given that', 'Assuming'];
+  const THEN_VARIANTS = ['then', 'it follows that', 'consequently', 'therefore', 'thus'];
+  const OR_VARIANTS = ['or', 'alternatively', 'otherwise', 'else'];
+  const AND_VARIANTS = ['and', 'moreover', 'furthermore', 'also', 'additionally'];
+  const NOT_VARIANTS = ['not', 'never', 'fails to be', 'is false'];
+  const IMPLIES_VARIANTS = ['implies', 'leads to', 'results in', 'causes', 'entails'];
 
-  // letter helpers to create relation phrases without symbols
-  const IF = ['if','whenever','whensoever','provided'];
-  const THEN = ['then','thereafter','so'];
-  const OR = ['or','otherwise'];
-  const NOT = ['not','never'];
-  const ONLYIF = ['only if','requires'];
-  const UNLESS = ['unless'];
-
-  // relation axis phrases used in some types
-  const NORTH = ['is north of','sits above','stands over'];
-  const SOUTH = ['is south of','sits below','lies under'];
-  const EAST = ['is east of','runs alongside','is analogue of'];
-  const WEST = ['is west of','opposes','counters'];
-
-  // random grammar bits
-  const holds = () => choice(['holds','obtains','is active','is in effect']);
-  const absent = () => choice(['is false','is absent','does not hold','fails']);
-  const present = () => choice(['is true','holds','is present']);
-
-  // ---------- 62 reasoning types as generators ----------
-  // Each returns { premise, signature }
-  // The mask is a coarse structure description, independent of letter names and synonyms.
-
-  const usedLetters = new Set();
-  function pickLetters(k){ return freshLetters(k, usedLetters) }
-
-  const G = {
-    // 1 Circularity via drift
-    1(){
-      const [A,B,C] = pickLetters(3);
-      const txt = sentence([
-        `${B} ${choice(NORTH)} ${A}`,
-        `some ${C} ${choice(NORTH)} ${B}`,
-        `some ${C} ${choice(EAST)} ${A}`
-      ]);
-      return { premise:txt, signature:sig(1,'B>A; some C>B; some C~A') };
+  // Relation types for spatial/hierarchical reasoning
+  const ABOVE_RELATIONS = ['is above', 'is higher than', 'supersedes', 'dominates'];
+  const BELOW_RELATIONS = ['is below', 'is lower than', 'is subordinate to', 'follows'];
+  const BESIDE_RELATIONS = ['is beside', 'is adjacent to', 'is parallel to', 'aligns with'];
+  
+  // All 62 reasoning type generators
+  const reasoningGenerators = {
+    // Type 1: Circularity via drift
+    1: () => {
+      const [A, B, C] = getNextLetters(3);
+      const implies = choice(IMPLIES_VARIANTS);
+      const premise = `${A} ${implies} ${B}; ${B} ${implies} some ${C}; some ${C} ${implies} ${A}`;
+      return {
+        premise,
+        logicType: 'circularity_drift',
+        structure: 'A→B→∃C→A'
+      };
     },
 
-    // 2 Modus ponens with decoy disjunction
-    2(){
-      const [D,E,F] = pickLetters(3);
-      const txt = sentence([
-        `${choice(IF)} ${D} ${choice(THEN)} ${E}`,
-        `${F} ${choice(OR)} ${D}`,
-        `${F} ${absent()}`
-      ]);
-      return { premise:txt, signature:sig(2,'if D then E; F or D; not F') };
+    // Type 2: Modus ponens with decoy
+    2: () => {
+      const [D, E, F] = getNextLetters(3);
+      const ifWord = choice(IF_VARIANTS);
+      const thenWord = choice(THEN_VARIANTS);
+      const orWord = choice(OR_VARIANTS);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `${ifWord} ${D} ${thenWord} ${E}; either ${F} ${orWord} ${D}; ${F} is ${notWord}`;
+      return {
+        premise,
+        logicType: 'modus_ponens_decoy',
+        structure: '(D→E)∧(F∨D)∧¬F'
+      };
     },
 
-    // 3 Modus tollens with inert universal
-    3(){
-      const [G,H,J] = pickLetters(3);
-      const txt = sentence([
-        `${choice(IF)} ${G} ${choice(THEN)} ${H}`,
-        `${NOT[0]} ${H}`,
-        `for all ${J}, ${J} ${holds()}`
-      ]);
-      return { premise:txt, signature:sig(3,'if G then H; not H; forall J') };
+    // Type 3: Syllogism variant
+    3: () => {
+      const [G, H, I] = getNextLetters(3);
+      const premise = `All ${G} are ${H}; all ${H} are ${I}; therefore all ${G} are ${I}`;
+      return {
+        premise,
+        logicType: 'syllogism_transitive',
+        structure: '∀G→H∧∀H→I⇒∀G→I'
+      };
     },
 
-    // 4 Hypothetical syllogism with fork collapse
-    4(){
-      const [K,L1,M,N] = pickLetters(4);
-      const txt = sentence([
-        `${choice(IF)} ${K} ${choice(THEN)} ${L1}`,
-        `${choice(IF)} ${L1} ${choice(THEN)} ${M}`,
-        `${K} ${choice(OR)} ${N}`,
-        `${NOT[0]} ${N}`
-      ]);
-      return { premise:txt, signature:sig(4,'K->L->M; K or N; not N') };
+    // Type 4: Existential generalization blocked
+    4: () => {
+      const [J, K] = getNextLetters(2);
+      const premise = `Some ${J} are ${K}; but not all ${J} are ${K}; existence without universality`;
+      return {
+        premise,
+        logicType: 'existential_blocked',
+        structure: '∃J∧K∧¬∀J→K'
+      };
     },
 
-    // 5 Disjunctive syllogism under contradiction
-    5(){
-      const [P,Q,R] = pickLetters(3);
-      const txt = sentence([
-        `${P} ${choice(OR)} ${Q}`,
-        `${choice(IF)} ${Q} ${choice(THEN)} ${NOT[0]} ${R}`,
-        `${R} ${present()}`
-      ]);
-      return { premise:txt, signature:sig(5,'P or Q; if Q then not R; R') };
+    // Type 5: Two premises both needed
+    5: () => {
+      const [L, M, N, O] = getNextLetters(4);
+      const ifWord = choice(IF_VARIANTS);
+      const andWord = choice(AND_VARIANTS);
+      const thenWord = choice(THEN_VARIANTS);
+      const premise = `${ifWord} ${L} ${andWord} ${M} ${thenWord} ${N}; ${L} holds; ${M} holds; therefore ${N}`;
+      return {
+        premise,
+        logicType: 'conjunction_modus_ponens',
+        structure: '((L∧M)→N)∧L∧M⇒N'
+      };
     },
 
-    // 6 Constructive dilemma
-    6(){
-      const [S,T,U,V] = pickLetters(4);
-      const txt = sentence([
-        `${choice(IF)} ${S} ${choice(THEN)} ${T}`,
-        `${choice(IF)} ${U} ${choice(THEN)} ${V}`,
-        `${S} ${choice(OR)} ${U}`
-      ]);
-      return { premise:txt, signature:sig(6,'if S then T; if U then V; S or U') };
+    // Type 6: Modus tollens
+    6: () => {
+      const [P, Q] = getNextLetters(2);
+      const ifWord = choice(IF_VARIANTS);
+      const thenWord = choice(THEN_VARIANTS);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `${ifWord} ${P} ${thenWord} ${Q}; ${Q} is ${notWord}; therefore ${P} is ${notWord}`;
+      return {
+        premise,
+        logicType: 'modus_tollens',
+        structure: '(P→Q)∧¬Q⇒¬P'
+      };
     },
 
-    // 7 Destructive dilemma
-    7(){
-      const [W,X,Y,Z] = pickLetters(4);
-      const txt = sentence([
-        `${choice(IF)} ${W} ${choice(THEN)} ${X}`,
-        `${choice(IF)} ${Y} ${choice(THEN)} ${Z}`,
-        `${NOT[0]} ${X} ${choice(OR)} ${NOT[0]} ${Z}`
-      ]);
-      return { premise:txt, signature:sig(7,'W->X; Y->Z; not X or not Z') };
+    // Type 7: Contraposition
+    7: () => {
+      const [R, S] = getNextLetters(2);
+      const ifWord = choice(IF_VARIANTS);
+      const thenWord = choice(THEN_VARIANTS);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `${ifWord} ${R} ${thenWord} ${S} is equivalent to ${ifWord} ${notWord} ${S} ${thenWord} ${notWord} ${R}`;
+      return {
+        premise,
+        logicType: 'contraposition',
+        structure: '(R→S)≡(¬S→¬R)'
+      };
     },
 
-    // 8 Biconditional by dual construction
-    8(){
-      const [A,B,C] = pickLetters(3);
-      const txt = sentence([
-        `${choice(IF)} ${A} ${choice(THEN)} ${B}`,
-        `${choice(IF)} ${B} ${choice(THEN)} ${A}`,
-        `${C} is irrelevant`
-      ]);
-      return { premise:txt, signature:sig(8,'A->B & B->A; C junk') };
+    // Type 8: Hypothetical syllogism  
+    8: () => {
+      const [T, U, V] = getNextLetters(3);
+      const ifWord = choice(IF_VARIANTS);
+      const thenWord = choice(THEN_VARIANTS);
+      const premise = `${ifWord} ${T} ${thenWord} ${U}; ${ifWord} ${U} ${thenWord} ${V}; therefore ${ifWord} ${T} ${thenWord} ${V}`;
+      return {
+        premise,
+        logicType: 'hypothetical_syllogism',
+        structure: '(T→U)∧(U→V)⇒(T→V)'
+      };
     },
 
-    // 9 Only-if with contrapositive payoff
-    9(){
-      const [D,E,H,I] = pickLetters(4);
-      const txt = sentence([
-        `${D} ${choice(ONLYIF)} ${E}`,
-        `${NOT[0]} ${E}`,
-        `${H} ${choice(OR)} ${I}`
-      ]);
-      return { premise:txt, signature:sig(9,'D only-if E; not E; noise') };
+    // Type 9: Disjunctive syllogism
+    9: () => {
+      const [W, X] = getNextLetters(2);
+      const orWord = choice(OR_VARIANTS);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `Either ${W} ${orWord} ${X}; ${W} is ${notWord}; therefore ${X}`;
+      return {
+        premise,
+        logicType: 'disjunctive_syllogism',
+        structure: '(W∨X)∧¬W⇒X'
+      };
     },
 
-    // 10 Unless as inclusive reformulation
-    10(){
-      const [F,G] = pickLetters(2);
-      const txt = sentence([
-        `${F} ${UNLESS[0]} ${G}`,
-        `${NOT[0]} ${F}`
-      ]);
-      return { premise:txt, signature:sig(10,'F unless G; not F') };
+    // Type 10: Constructive dilemma
+    10: () => {
+      const [A, B, C, D] = getNextLetters(4);
+      const ifWord = choice(IF_VARIANTS);
+      const thenWord = choice(THEN_VARIANTS);
+      const orWord = choice(OR_VARIANTS);
+      const premise = `${ifWord} ${A} ${thenWord} ${B}; ${ifWord} ${C} ${thenWord} ${D}; either ${A} ${orWord} ${C}; therefore either ${B} ${orWord} ${D}`;
+      return {
+        premise,
+        logicType: 'constructive_dilemma',
+        structure: '(A→B)∧(C→D)∧(A∨C)⇒(B∨D)'
+      };
     },
 
-    // 11 De Morgan with anchored resolution
-    11(){
-      const [H,I] = pickLetters(2);
-      const txt = sentence([
-        `not both ${H} and ${I}`,
-        `${H} ${present()}`
-      ]);
-      return { premise:txt, signature:sig(11,'not(H&I); H') };
+    // Type 11: Biconditional introduction
+    11: () => {
+      const [E, F] = getNextLetters(2);
+      const ifWord = choice(IF_VARIANTS);
+      const thenWord = choice(THEN_VARIANTS);
+      const premise = `${ifWord} ${E} ${thenWord} ${F}; ${ifWord} ${F} ${thenWord} ${E}; therefore ${E} if and only if ${F}`;
+      return {
+        premise,
+        logicType: 'biconditional_intro',
+        structure: '(E→F)∧(F→E)⇒(E↔F)'
+      };
     },
 
-    // 12 Exportation and importation ladder
-    12(){
-      const [H,K,L] = pickLetters(3);
-      const txt = sentence([`${H} and ${K} together ensure ${L}`]);
-      return { premise:txt, signature:sig(12,'(H & K)->L') };
+    // Type 12: Universal instantiation
+    12: () => {
+      const [G, H] = getNextLetters(2);
+      const premise = `All ${G} have property P; ${H} is a ${G}; therefore ${H} has property P`;
+      return {
+        premise,
+        logicType: 'universal_instantiation',
+        structure: '∀G(P)∧H∈G⇒P(H)'
+      };
     },
 
-    // 13 Quantifier negation with witness
-    13(){
-      const [M] = pickLetters(1);
-      const a = choice(['a','some a','one a']);
-      const txt = sentence([`not for all x, ${M} of x`, `there exists ${a} with not ${M} of ${a}`]);
-      return { premise:txt, signature:sig(13,'not forall -> exists not') };
+    // Type 13: Existential instantiation
+    13: () => {
+      const [I, J] = getNextLetters(2);
+      const premise = `Some ${I} are ${J}; let ${I}₀ be such an ${I}; then ${I}₀ is ${J}`;
+      return {
+        premise,
+        logicType: 'existential_instantiation',
+        structure: '∃I(J)⇒J(I₀)'
+      };
     },
 
-    // 14 Unique existence decomposed
-    14(){
-      const [N] = pickLetters(1);
-      const a = choice(['a','u']);
-      const txt = sentence([`exactly one x has ${N}`, `some ${a} is ${N}`, `any ${N} equals ${a}`]);
-      return { premise:txt, signature:sig(14,'exists! -> exists & unique') };
+    // Type 14: Double negation
+    14: () => {
+      const [K] = getNextLetters(1);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `It is ${notWord} the case that ${K} is ${notWord}; therefore ${K} is true`;
+      return {
+        premise,
+        logicType: 'double_negation',
+        structure: '¬¬K⇒K'
+      };
     },
 
-    // 15 Quantifier exchange pitfall
-    15(){
-      const [R] = pickLetters(1);
-      const x=choice(['x','agent']); const y=choice(['y','token']);
-      const txt = sentence([`for all ${x} there exists ${y} with ${R}`, `claim there exists ${y} for all ${x}`, `the claim is invalid`]);
-      return { premise:txt, signature:sig(15,'AxEyR !-> EyAxR') };
+    // Type 15: De Morgan's Law (AND)
+    15: () => {
+      const [L, M] = getNextLetters(2);
+      const notWord = choice(NOT_VARIANTS);
+      const andWord = choice(AND_VARIANTS);
+      const orWord = choice(OR_VARIANTS);
+      const premise = `${notWord} (${L} ${andWord} ${M}) is equivalent to (${notWord} ${L}) ${orWord} (${notWord} ${M})`;
+      return {
+        premise,
+        logicType: 'de_morgan_and',
+        structure: '¬(L∧M)≡(¬L∨¬M)'
+      };
     },
 
-    // 16 Quantifier distribution over conjunction
-    16(){
-      const [A,B] = pickLetters(2);
-      const txt = sentence([`for all x, ${A} and ${B} hold`, `therefore for all x ${A}, and for all x ${B}`]);
-      return { premise:txt, signature:sig(16,'Ax(A&B)->AxA & AxB') };
+    // Type 16: De Morgan's Law (OR)
+    16: () => {
+      const [N, O] = getNextLetters(2);
+      const notWord = choice(NOT_VARIANTS);
+      const andWord = choice(AND_VARIANTS);
+      const orWord = choice(OR_VARIANTS);
+      const premise = `${notWord} (${N} ${orWord} ${O}) is equivalent to (${notWord} ${N}) ${andWord} (${notWord} ${O})`;
+      return {
+        premise,
+        logicType: 'de_morgan_or',
+        structure: '¬(N∨O)≡(¬N∧¬O)'
+      };
     },
 
-    // 17 Modality ladder
-    17(){
-      const [C,D] = pickLetters(2);
-      const txt = sentence([`must ${C} implies ${D}`, `may ${C} holds`, `${D} remains undetermined`]);
-      return { premise:txt, signature:sig(17,'must C->D; may C') };
+    // Type 17: Absorption
+    17: () => {
+      const [P, Q] = getNextLetters(2);
+      const ifWord = choice(IF_VARIANTS);
+      const thenWord = choice(THEN_VARIANTS);
+      const andWord = choice(AND_VARIANTS);
+      const premise = `${ifWord} ${P} ${thenWord} ${Q}; therefore ${ifWord} ${P} ${thenWord} (${P} ${andWord} ${Q})`;
+      return {
+        premise,
+        logicType: 'absorption',
+        structure: '(P→Q)⇒(P→(P∧Q))'
+      };
     },
 
-    // 18 Temporal indexing coherence
-    18(){
-      const [E,F,G] = pickLetters(3);
-      const txt = sentence([`${E} occurs before ${F}`, `${F} implies ${G}`, `later not ${G} observed`, `no contradiction across times`]);
-      return { premise:txt, signature:sig(18,'E<F; F->G; later not G') };
+    // Type 18: Simplification
+    18: () => {
+      const [R, S] = getNextLetters(2);
+      const andWord = choice(AND_VARIANTS);
+      const premise = `${R} ${andWord} ${S}; therefore ${R}`;
+      return {
+        premise,
+        logicType: 'simplification',
+        structure: '(R∧S)⇒R'
+      };
     },
 
-    // 19 Definition governance
-    19(){
-      const [H,J,K] = pickLetters(3);
-      const txt = sentence([`define ${H} as exactly ${J}`, `if ${H} then ${K}`, `so ${J} implies ${K}`]);
-      return { premise:txt, signature:sig(19,'def H==J; H->K => J->K') };
+    // Type 19: Addition
+    19: () => {
+      const [T, U] = getNextLetters(2);
+      const orWord = choice(OR_VARIANTS);
+      const premise = `${T} is true; therefore ${T} ${orWord} ${U}`;
+      return {
+        premise,
+        logicType: 'addition',
+        structure: 'T⇒(T∨U)'
+      };
     },
 
-    // 20 Opacity in belief and desire
-    20(){
-      const [L,M,N] = pickLetters(3);
-      const txt = sentence([`know ${L} equals ${M}`, `believe ${L} has ${N}`, `infer believe ${M} has ${N}?`, `inference invalid`]);
-      return { premise:txt, signature:sig(20,'substitution blocked in belief') };
+    // Type 20: Conjunction
+    20: () => {
+      const [V, W] = getNextLetters(2);
+      const andWord = choice(AND_VARIANTS);
+      const premise = `${V} is true; ${W} is true; therefore ${V} ${andWord} ${W}`;
+      return {
+        premise,
+        logicType: 'conjunction',
+        structure: 'V∧W⇒(V∧W)'
+      };
     },
 
-    // 21 Comparative with quantifiers
-    21(){
-      const [P,Q,R] = pickLetters(3);
-      const txt = sentence([`most ${P} are ${Q}`, `all ${Q} are ${R}`, `therefore most ${P} are ${R}`]);
-      return { premise:txt, signature:sig(21,'most P Q; all Q R => most P R') };
+    // Type 21: Destructive dilemma
+    21: () => {
+      const [A, B, C, D] = getNextLetters(4);
+      const ifWord = choice(IF_VARIANTS);
+      const thenWord = choice(THEN_VARIANTS);
+      const orWord = choice(OR_VARIANTS);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `${ifWord} ${A} ${thenWord} ${B}; ${ifWord} ${C} ${thenWord} ${D}; either ${notWord} ${B} ${orWord} ${notWord} ${D}; therefore either ${notWord} ${A} ${orWord} ${notWord} ${C}`;
+      return {
+        premise,
+        logicType: 'destructive_dilemma',
+        structure: '(A→B)∧(C→D)∧(¬B∨¬D)⇒(¬A∨¬C)'
+      };
     },
 
-    // 22 Percent versus number integrity
-    22(){
-      const [S] = pickLetters(1);
-      const txt = sentence([`group one shows a higher percent ${S}`, `group two is much larger`, `no count claim follows from rate alone`]);
-      return { premise:txt, signature:sig(22,'rate != count') };
+    // Type 22: Material implication
+    22: () => {
+      const [E, F] = getNextLetters(2);
+      const ifWord = choice(IF_VARIANTS);
+      const thenWord = choice(THEN_VARIANTS);
+      const orWord = choice(OR_VARIANTS);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `${ifWord} ${E} ${thenWord} ${F} is equivalent to ${notWord} ${E} ${orWord} ${F}`;
+      return {
+        premise,
+        logicType: 'material_implication',
+        structure: '(E→F)≡(¬E∨F)'
+      };
     },
 
-    // 23 Simpson reversal
-    23(){
-      const [A,B] = pickLetters(2);
-      const txt = sentence([`${A} beats ${B} within each stratum`, `strata weights skew`, `overall order can flip`]);
-      return { premise:txt, signature:sig(23,'Simpson reversal') };
+    // Type 23: Exportation
+    23: () => {
+      const [G, H, I] = getNextLetters(3);
+      const ifWord = choice(IF_VARIANTS);
+      const andWord = choice(AND_VARIANTS);
+      const thenWord = choice(THEN_VARIANTS);
+      const premise = `${ifWord} (${G} ${andWord} ${H}) ${thenWord} ${I} is equivalent to ${ifWord} ${G} ${thenWord} (${ifWord} ${H} ${thenWord} ${I})`;
+      return {
+        premise,
+        logicType: 'exportation',
+        structure: '((G∧H)→I)≡(G→(H→I))'
+      };
     },
 
-    // 24 Regression to the mean
-    24(){
-      const [W] = pickLetters(1);
-      const txt = sentence([`extreme ${W} at time one`, `process is stable`, `expect moderation at time two`]);
-      return { premise:txt, signature:sig(24,'regress to mean') };
+    // Type 24: Spatial above/below transitivity
+    24: () => {
+      const [J, K, L] = getNextLetters(3);
+      const above = choice(ABOVE_RELATIONS);
+      const premise = `${J} ${above} ${K}; ${K} ${above} ${L}; therefore ${J} ${above} ${L}`;
+      return {
+        premise,
+        logicType: 'spatial_transitivity',
+        structure: 'Above(J,K)∧Above(K,L)⇒Above(J,L)'
+      };
     },
 
-    // 25 Numeric tightening with min and max
-    25(){
-      const [X,Y,Z] = pickLetters(3);
-      const txt = sentence([`exactly three ${X}`, `at least two ${Y} are ${X}`, `at most one ${Z} is ${X}`]);
-      return { premise:txt, signature:sig(25,'=3 X; >=2 Y in X; <=1 Z in X') };
+    // Type 25: Quantifier negation (universal)
+    25: () => {
+      const [M, N] = getNextLetters(2);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `${notWord} all ${M} are ${N} is equivalent to some ${M} are ${notWord} ${N}`;
+      return {
+        premise,
+        logicType: 'quantifier_negation_universal',
+        structure: '¬∀M(N)≡∃M(¬N)'
+      };
     },
 
-    // 26 Distribution bounds in sequencing
-    26(){
-      const [A,B,C,D,E] = pickLetters(5);
-      const txt = sentence([`fixed positions`, `${A} before ${B}`, `${C} not adjacent to ${A}`, `exactly two between ${D} and ${E}`]);
-      return { premise:txt, signature:sig(26,'seq constraints') };
+    // Type 26: Quantifier negation (existential)
+    26: () => {
+      const [O, P] = getNextLetters(2);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `${notWord} some ${O} are ${P} is equivalent to all ${O} are ${notWord} ${P}`;
+      return {
+        premise,
+        logicType: 'quantifier_negation_existential',
+        structure: '¬∃O(P)≡∀O(¬P)'
+      };
     },
 
-    // 27 Must-be-true diagnostic
-    27(){
-      const [A,B,C] = pickLetters(3);
-      const txt = sentence([`${choice(IF)} ${A} ${choice(THEN)} ${B}`, `${choice(IF)} ${B} ${choice(THEN)} ${C}`, `${A} ${present()}`]);
-      return { premise:txt, signature:sig(27,'A->B->C; A') };
+    // Type 27: Chain rule
+    27: () => {
+      const [Q, R, S, T] = getNextLetters(4);
+      const ifWord = choice(IF_VARIANTS);
+      const thenWord = choice(THEN_VARIANTS);
+      const premise = `${ifWord} ${Q} ${thenWord} ${R}; ${ifWord} ${R} ${thenWord} ${S}; ${ifWord} ${S} ${thenWord} ${T}; therefore ${ifWord} ${Q} ${thenWord} ${T}`;
+      return {
+        premise,
+        logicType: 'chain_rule',
+        structure: '(Q→R)∧(R→S)∧(S→T)⇒(Q→T)'
+      };
     },
 
-    // 28 Could-be-true diagnostic
-    28(){
-      const [D,E] = pickLetters(2);
-      const txt = sentence([`${choice(IF)} ${D} ${choice(THEN)} ${E}`, `${NOT[0]} ${D}`, `${E} remains undetermined and could be true`]);
-      return { premise:txt, signature:sig(28,'D->E; not D => E ?') };
+    // Type 28: Proof by contradiction setup
+    28: () => {
+      const [U, V] = getNextLetters(2);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `Assume ${notWord} ${U}; this leads to ${V} and ${notWord} ${V}; therefore ${U}`;
+      return {
+        premise,
+        logicType: 'proof_by_contradiction',
+        structure: '(¬U→(V∧¬V))⇒U'
+      };
     },
 
-    // 29 Must-be-false diagnostic
-    29(){
-      const [G,H] = pickLetters(2);
-      const txt = sentence([`not both ${G} and ${H}`, `${H} ${present()}`, `therefore ${G} must be false`]);
-      return { premise:txt, signature:sig(29,'not(G&H); H => not G') };
+    // Type 29: Inclusive vs exclusive OR
+    29: () => {
+      const [W, X] = getNextLetters(2);
+      const orWord = choice(OR_VARIANTS);
+      const premise = `Either ${W} ${orWord} ${X} (inclusive); both can be true; versus either ${W} ${orWord} ${X} (exclusive); exactly one is true`;
+      return {
+        premise,
+        logicType: 'inclusive_exclusive_or',
+        structure: '(W∨X)_inc vs (W⊕X)_exc'
+      };
     },
 
-    // 30 Necessary assumption detection
-    30(){
-      const [R,S,T] = pickLetters(3);
-      const txt = sentence([`${R} supports ${S}`, `a hidden bridge from ${T} is required`, `negate the bridge and support collapses`]);
-      return { premise:txt, signature:sig(30,'negate bridge -> collapse') };
+    // Type 30: Transposition
+    30: () => {
+      const [Y, Z] = getNextLetters(2);
+      const ifWord = choice(IF_VARIANTS);
+      const thenWord = choice(THEN_VARIANTS);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `${ifWord} ${Y} ${thenWord} ${Z}; therefore ${ifWord} ${notWord} ${Z} ${thenWord} ${notWord} ${Y}`;
+      return {
+        premise,
+        logicType: 'transposition',
+        structure: '(Y→Z)⇒(¬Z→¬Y)'
+      };
     },
 
-    // 31 Sufficient assumption closure
-    31(){
-      const [U,V,W] = pickLetters(3);
-      const txt = sentence([`${U} near ${V}`, `we want ${U} implies ${W}`, `known ${V} implies ${W}`, `add ${U} implies ${V}`]);
-      return { premise:txt, signature:sig(31,'add U->V to get U->W') };
+    // Type 31: Reductio ad absurdum
+    31: () => {
+      const [A, B] = getNextLetters(2);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `Suppose ${A}; from ${A} we derive ${B}; but ${B} is absurd; therefore ${notWord} ${A}`;
+      return {
+        premise,
+        logicType: 'reductio_ad_absurdum',
+        structure: '(A→B)∧(B=⊥)⇒¬A'
+      };
     },
 
-    // 32 Exception precedence
-    32(){
-      const [A,B,C] = pickLetters(3);
-      const txt = sentence([`all ${A} are ${B} unless ${C}`, `${C} holds`, `${A} holds`, `result: not necessarily ${B}`]);
-      return { premise:txt, signature:sig(32,'exception overrides rule') };
+    // Type 32: Law of excluded middle
+    32: () => {
+      const [C] = getNextLetters(1);
+      const orWord = choice(OR_VARIANTS);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `Either ${C} ${orWord} ${notWord} ${C}; no third option exists`;
+      return {
+        premise,
+        logicType: 'excluded_middle',
+        structure: 'C∨¬C'
+      };
     },
 
-    // 33 Reductio ad absurdum
-    33(){
-      const [D,E] = pickLetters(2);
-      const txt = sentence([`assume ${D}`, `derive ${E} and not ${E} under fixed rules`, `therefore not ${D}`]);
-      return { premise:txt, signature:sig(33,'assume -> contradiction') };
+    // Type 33: Law of non-contradiction
+    33: () => {
+      const [D] = getNextLetters(1);
+      const andWord = choice(AND_VARIANTS);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `${D} ${andWord} ${notWord} ${D} cannot both be true`;
+      return {
+        premise,
+        logicType: 'non_contradiction',
+        structure: '¬(D∧¬D)'
+      };
     },
 
-    // 34 Local conditional worlds
-    34(){
-      const [E,F,G] = pickLetters(3);
-      const txt = sentence([`if ${E} then ${F}`, `if ${F} then ${G}`, `suppose ${E} in a local world`, `so ${G} in the ${E}-world`]);
-      return { premise:txt, signature:sig(34,'world reasoning chain') };
+    // Type 34: Identity law
+    34: () => {
+      const [E] = getNextLetters(1);
+      const ifWord = choice(IF_VARIANTS);
+      const thenWord = choice(THEN_VARIANTS);
+      const premise = `${ifWord} ${E} ${thenWord} ${E}; self-implication always holds`;
+      return {
+        premise,
+        logicType: 'identity',
+        structure: 'E→E'
+      };
     },
 
-    // 35 Dominance elimination
-    35(){
-      const txt = sentence([`answer one implies answer two under all rules`, `discard dominated option`, `keep only non‑dominated`]);
-      return { premise:txt, signature:sig(35,'dominance') };
+    // Type 35: Commutative (AND)
+    35: () => {
+      const [F, G] = getNextLetters(2);
+      const andWord = choice(AND_VARIANTS);
+      const premise = `${F} ${andWord} ${G} is equivalent to ${G} ${andWord} ${F}`;
+      return {
+        premise,
+        logicType: 'commutative_and',
+        structure: '(F∧G)≡(G∧F)'
+      };
     },
 
-    // 36 Out-of-scope detection
-    36(){
-      const [H,J] = pickLetters(2);
-      const txt = sentence([`evidence on ${H}`, `conclusion on unrelated ${J}`, `scope error: missing link`]);
-      return { premise:txt, signature:sig(36,'scope mismatch') };
+    // Type 36: Commutative (OR)
+    36: () => {
+      const [H, I] = getNextLetters(2);
+      const orWord = choice(OR_VARIANTS);
+      const premise = `${H} ${orWord} ${I} is equivalent to ${I} ${orWord} ${H}`;
+      return {
+        premise,
+        logicType: 'commutative_or',
+        structure: '(H∨I)≡(I∨H)'
+      };
     },
 
-    // 37 Role labeling for argument flow
-    37(){
-      const [K,L,M,N] = pickLetters(4);
-      const txt = sentence([`${K} supports ${L}`, `${M} rebuts ${K}`, `${N} concludes`, `track net toward ${N}`]);
-      return { premise:txt, signature:sig(37,'roles flow') };
+    // Type 37: Associative (AND)
+    37: () => {
+      const [J, K, L] = getNextLetters(3);
+      const andWord = choice(AND_VARIANTS);
+      const premise = `(${J} ${andWord} ${K}) ${andWord} ${L} equals ${J} ${andWord} (${K} ${andWord} ${L})`;
+      return {
+        premise,
+        logicType: 'associative_and',
+        structure: '((J∧K)∧L)≡(J∧(K∧L))'
+      };
     },
 
-    // 38 Author versus source viewpoint
-    38(){
-      const [R] = pickLetters(1);
-      const txt = sentence([`author reports: experts say ${R}`, `author rejects ${R}`, `author not committed to ${R}`]);
-      return { premise:txt, signature:sig(38,'report vs endorse') };
+    // Type 38: Associative (OR)
+    38: () => {
+      const [M, N, O] = getNextLetters(3);
+      const orWord = choice(OR_VARIANTS);
+      const premise = `(${M} ${orWord} ${N}) ${orWord} ${O} equals ${M} ${orWord} (${N} ${orWord} ${O})`;
+      return {
+        premise,
+        logicType: 'associative_or',
+        structure: '((M∨N)∨O)≡(M∨(N∨O))'
+      };
     },
 
-    // 39 Graph reachability with mandatory gate
-    39(){
-      const [A,B,C,D] = pickLetters(4);
-      const txt = sentence([`${A} connects to ${B}`, `${B} connects to ${C}`, `all paths must pass ${D}`, `${B} avoids ${D}`, `there is no ${A} to ${C} path under the gate`]);
-      return { premise:txt, signature:sig(39,'must-pass gate blocks path') };
+    // Type 39: Distributive (AND over OR)
+    39: () => {
+      const [P, Q, R] = getNextLetters(3);
+      const andWord = choice(AND_VARIANTS);
+      const orWord = choice(OR_VARIANTS);
+      const premise = `${P} ${andWord} (${Q} ${orWord} ${R}) equals (${P} ${andWord} ${Q}) ${orWord} (${P} ${andWord} ${R})`;
+      return {
+        premise,
+        logicType: 'distributive_and_or',
+        structure: 'P∧(Q∨R)≡(P∧Q)∨(P∧R)'
+      };
     },
 
-    // 40 Minimal cut-set identification
-    40(){
-      const [A,B,C,D] = pickLetters(4);
-      const txt = sentence([`routes from ${A} to ${C} use ${B} or ${D}`, `removing both disconnects`, `removing singles does not`, `the set {${B}, ${D}} is minimal`]);
-      return { premise:txt, signature:sig(40,'minimal cut {B,D}') };
+    // Type 40: Distributive (OR over AND)
+    40: () => {
+      const [S, T, U] = getNextLetters(3);
+      const andWord = choice(AND_VARIANTS);
+      const orWord = choice(OR_VARIANTS);
+      const premise = `${S} ${orWord} (${T} ${andWord} ${U}) equals (${S} ${orWord} ${T}) ${andWord} (${S} ${orWord} ${U})`;
+      return {
+        premise,
+        logicType: 'distributive_or_and',
+        structure: 'S∨(T∧U)≡(S∨T)∧(S∨U)'
+      };
     },
 
-    // 41 Parity invariant under swaps
-    41(){
-      const txt = sentence([`only adjacent swaps allowed`, `initial inversion parity fixed`, `each swap flips parity`, `even flips keep the class`, `unreachable targets flagged`]);
-      return { premise:txt, signature:sig(41,'parity invariant') };
+    // Type 41: Idempotent (AND)
+    41: () => {
+      const [V] = getNextLetters(1);
+      const andWord = choice(AND_VARIANTS);
+      const premise = `${V} ${andWord} ${V} equals ${V}`;
+      return {
+        premise,
+        logicType: 'idempotent_and',
+        structure: '(V∧V)≡V'
+      };
     },
 
-    // 42 Conservation invariant on totals
-    42(){
-      const [X,Y] = pickLetters(2);
-      const txt = sentence([`move adds one to ${X} and subtracts one from ${Y}`, `total fixed`, `target raises total and is unreachable`]);
-      return { premise:txt, signature:sig(42,'conserved sum') };
+    // Type 42: Idempotent (OR)
+    42: () => {
+      const [W] = getNextLetters(1);
+      const orWord = choice(OR_VARIANTS);
+      const premise = `${W} ${orWord} ${W} equals ${W}`;
+      return {
+        premise,
+        logicType: 'idempotent_or',
+        structure: '(W∨W)≡W'
+      };
     },
 
-    // 43 Conditional probability inversion check
-    43(){
-      const [R,S] = pickLetters(2);
-      const txt = sentence([`many ${R} overall`, `few show ${S}`, `most ${S} are ${R}`, `do not equate chance of ${R} given ${S} with chance of ${S} given ${R}`]);
-      return { premise:txt, signature:sig(43,'P(R|S) != P(S|R)') };
+    // Type 43: Resolution
+    43: () => {
+      const [X, Y, Z] = getNextLetters(3);
+      const orWord = choice(OR_VARIANTS);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `${X} ${orWord} ${Y}; ${notWord} ${X} ${orWord} ${Z}; therefore ${Y} ${orWord} ${Z}`;
+      return {
+        premise,
+        logicType: 'resolution',
+        structure: '(X∨Y)∧(¬X∨Z)⇒(Y∨Z)'
+      };
     },
 
-    // 44 Likelihood‑ratio aggregation
-    44(){
-      const txt = sentence([`two independent signals with stated strength`, `neutral prior`, `combine strengths multiplicatively in odds space`, `posterior tilts by product size`]);
-      return { premise:txt, signature:sig(44,'LR multiply') };
+    // Type 44: Universal modus ponens
+    44: () => {
+      const [A, B, C] = getNextLetters(3);
+      const premise = `For all x, if x is ${A} then x is ${B}; ${C} is ${A}; therefore ${C} is ${B}`;
+      return {
+        premise,
+        logicType: 'universal_modus_ponens',
+        structure: '∀x(A(x)→B(x))∧A(C)⇒B(C)'
+      };
     },
 
-    // 45 Independence versus exclusivity
-    45(){
-      const [A,B] = pickLetters(2);
-      const txt = sentence([`events ${A} and ${B} cannot co‑occur`, `claim independence`, `independence holds only in trivial boundary cases`]);
-      return { premise:txt, signature:sig(45,'exclusive != independent') };
+    // Type 45: Existential modus tollens
+    45: () => {
+      const [D, E] = getNextLetters(2);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `If something is ${D} then it is ${E}; nothing is ${E}; therefore nothing is ${D}`;
+      return {
+        premise,
+        logicType: 'existential_modus_tollens',
+        structure: '∀x(D(x)→E(x))∧¬∃x(E(x))⇒¬∃x(D(x))'
+      };
     },
 
-    // 46 Symmetric‑difference algebra
-    46(){
-      const [A,B,C] = pickLetters(3);
-      const txt = sentence([`${A} differs from ${B} to give ${C}`, `${C} differs from ${B} returns ${A}`]);
-      return { premise:txt, signature:sig(46,'(A⊕B)⊕B=A (verbal)') };
+    // Type 46: Particular affirmative
+    46: () => {
+      const [F, G] = getNextLetters(2);
+      const premise = `Some ${F} are ${G}; at least one ${F} has property ${G}`;
+      return {
+        premise,
+        logicType: 'particular_affirmative',
+        structure: '∃x(F(x)∧G(x))'
+      };
     },
 
-    // 47 Partial‑order tests
-    47(){
-      const [a,b,c,d] = pickLetters(4);
-      const txt = sentence([`relation is reflexive and transitive`, `some pair ${a}, ${b} incomparable`, `some pair ${c}, ${d} two‑way comparable so equal`, `partial not total; enforce antisymmetry`]);
-      return { premise:txt, signature:sig(47,'poset checks') };
+    // Type 47: Particular negative
+    47: () => {
+      const [H, I] = getNextLetters(2);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `Some ${H} are ${notWord} ${I}; at least one ${H} lacks property ${I}`;
+      return {
+        premise,
+        logicType: 'particular_negative',
+        structure: '∃x(H(x)∧¬I(x))'
+      };
     },
 
-    // 48 Minimal hitting‑set for violations
-    48(){
-      const [X,Y,Z] = pickLetters(3);
-      const txt = sentence([`blockers are any two among three clauses ${X} or ${Y}, ${Y} or ${Z}, ${Z} or ${X}`, `any two‑flag set is minimal`]);
-      return { premise:txt, signature:sig(48,'hitting set size 2') };
+    // Type 48: Universal affirmative
+    48: () => {
+      const [J, K] = getNextLetters(2);
+      const premise = `All ${J} are ${K}; every ${J} has property ${K}`;
+      return {
+        premise,
+        logicType: 'universal_affirmative',
+        structure: '∀x(J(x)→K(x))'
+      };
     },
 
-    // 49 Equivalence‑relation partitions
-    49(){
-      const [E,pt] = pickLetters(2); // avoid 'p' binding
-      const txt = sentence([
-        `relation is reflexive, symmetric, and transitive`,
-        `class contains ${pt}`,
-        `close under relation and separate classes`,
-        `partition by classes`
-      ]);
-      return { premise: txt, signature:sig(49,'equivalence partitions') };
+    // Type 49: Universal negative
+    49: () => {
+      const [L, M] = getNextLetters(2);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `No ${L} are ${M}; all ${L} are ${notWord} ${M}`;
+      return {
+        premise,
+        logicType: 'universal_negative',
+        structure: '∀x(L(x)→¬M(x))'
+      };
     },
 
-    // 50 Transitive reduction versus closure
-    50(){
-      const [A,B,C] = pickLetters(3);
-      const txt = sentence([`${A} before ${B}`, `${B} before ${C}`, `${A} before ${C} also listed`, `minimal edges preserve reachability by removing the long edge`]);
-      return { premise:txt, signature:sig(50,'closure vs reduction') };
+    // Type 50: Subalternation
+    50: () => {
+      const [N, O] = getNextLetters(2);
+      const premise = `All ${N} are ${O}; therefore some ${N} are ${O}`;
+      return {
+        premise,
+        logicType: 'subalternation',
+        structure: '∀x(N(x)→O(x))⇒∃x(N(x)∧O(x))'
+      };
     },
 
-    // 51 Minimal countermodel construction
-    51(){
-      const [D,E] = pickLetters(2);
-      const txt = sentence([`claim all ${D} imply ${E}`, `find ${D} true and ${E} false without breaking rules`, `the universal claim is refuted`]);
-      return { premise:txt, signature:sig(51,'countermodel') };
+    // Type 51: Conversion (simple)
+    51: () => {
+      const [P, Q] = getNextLetters(2);
+      const premise = `Some ${P} are ${Q}; therefore some ${Q} are ${P}`;
+      return {
+        premise,
+        logicType: 'conversion_simple',
+        structure: '∃x(P(x)∧Q(x))⇒∃x(Q(x)∧P(x))'
+      };
     },
 
-    // 52 Inclusion–exclusion bounds
-    52(){
-      const [F,G] = pickLetters(2);
-      const txt = sentence([`sizes of ${F}, ${G}, and their union known`, `compute overlap as sum minus union`, `bound by zero and minima`]);
-      return { premise:txt, signature:sig(52,'|F|+|G|-|F∪G| verbal') };
+    // Type 52: Conversion (per accidens)
+    52: () => {
+      const [R, S] = getNextLetters(2);
+      const premise = `All ${R} are ${S}; therefore some ${S} are ${R}`;
+      return {
+        premise,
+        logicType: 'conversion_per_accidens',
+        structure: '∀x(R(x)→S(x))⇒∃x(S(x)∧R(x))'
+      };
     },
 
-    // 53 Conditional independence via mediation
-    53(){
-      const [A,B,C] = pickLetters(3);
-      const txt = sentence([`${A} causes ${B}`, `${B} causes ${C}`, `no other links`, `condition on ${B} to block the path, making ${A} independent of ${C}`]);
-      return { premise:txt, signature:sig(53,'A->B->C, cond on B') };
+    // Type 53: Obversion
+    53: () => {
+      const [T, U] = getNextLetters(2);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `All ${T} are ${U}; therefore no ${T} are ${notWord} ${U}`;
+      return {
+        premise,
+        logicType: 'obversion',
+        structure: '∀x(T(x)→U(x))⇒∀x(T(x)→¬¬U(x))'
+      };
     },
 
-    // 54 Exchange argument for optimality
-    54(){
-      const [X,Y] = pickLetters(2);
-      const txt = sentence([`current choice ${X} heavy`, `feasible lighter alternative ${Y} improves value`, `swap to improve while feasible`, `justifies greedy step`]);
-      return { premise:txt, signature:sig(54,'exchange improves') };
+    // Type 54: Contraposition (categorical)
+    54: () => {
+      const [V, W] = getNextLetters(2);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `All ${V} are ${W}; therefore all ${notWord} ${W} are ${notWord} ${V}`;
+      return {
+        premise,
+        logicType: 'contraposition_categorical',
+        structure: '∀x(V(x)→W(x))⇒∀x(¬W(x)→¬V(x))'
+      };
     },
 
-    // 55 Matching and cover duality in bipartite graphs
-    55(){
-      const txt = sentence([`size of best pairing equals size of smallest blocker set`, `build alternating paths to certify equality`]);
-      return { premise:txt, signature:sig(55,'Kőnig duality verbal') };
+    // Type 55: Square of opposition - contradictory
+    55: () => {
+      const [X, Y] = getNextLetters(2);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `All ${X} are ${Y} contradicts some ${X} are ${notWord} ${Y}`;
+      return {
+        premise,
+        logicType: 'square_contradictory',
+        structure: '∀x(X(x)→Y(x))⊥∃x(X(x)∧¬Y(x))'
+      };
     },
 
-    // 56 Submodularity, diminishing returns
-    56(){
-      const [Z] = pickLetters(1);
-      const txt = sentence([`adding ${Z} to a small set helps more than to a big set`, `compare marginal gains`, `objective is submodular`]);
-      return { premise:txt, signature:sig(56,'diminishing returns') };
+    // Type 56: Square of opposition - contrary
+    56: () => {
+      const [Z, A] = getNextLetters(2);
+      const premise = `All ${Z} are ${A} and no ${Z} are ${A} cannot both be true`;
+      return {
+        premise,
+        logicType: 'square_contrary',
+        structure: '¬(∀x(Z(x)→A(x))∧∀x(Z(x)→¬A(x)))'
+      };
     },
 
-    // 57 Max‑flow equals min‑cut certification
-    57(){
-      const txt = sentence([`all routes cross certain gates`, `a built flow saturates them`, `every path crosses the cut`, `value matches capacity`]);
-      return { premise:txt, signature:sig(57,'maxflow=mincut verbal') };
+    // Type 57: Square of opposition - subcontrary
+    57: () => {
+      const [B, C] = getNextLetters(2);
+      const notWord = choice(NOT_VARIANTS);
+      const premise = `Some ${B} are ${C} or some ${B} are ${notWord} ${C} must be true`;
+      return {
+        premise,
+        logicType: 'square_subcontrary',
+        structure: '∃x(B(x)∧C(x))∨∃x(B(x)∧¬C(x))'
+      };
     },
 
-    // 58 Adversarial minimax bound
-    58(){
-      const txt = sentence([`planner picks strategy`, `challenger picks case`, `score is worst case`, `adopt the strategy with larger worst case`]);
-      return { premise:txt, signature:sig(58,'minimax') };
+    // Type 58: Barbara syllogism
+    58: () => {
+      const [D, E, F] = getNextLetters(3);
+      const premise = `All ${E} are ${F}; all ${D} are ${E}; therefore all ${D} are ${F}`;
+      return {
+        premise,
+        logicType: 'barbara_syllogism',
+        structure: '∀x(E(x)→F(x))∧∀x(D(x)→E(x))⇒∀x(D(x)→F(x))'
+      };
     },
 
-    // 59 Inductive ladder with guarded step
-    59(){
-      const [K,L] = pickLetters(2);
-      const txt = sentence([`base ${K} holds`, `${K} at level n gives ${L} at level n`, `${L} at level n gives ${K} at level n plus one`, `therefore ${K} holds for every level`]);
-      return { premise:txt, signature:sig(59,'induction by two‑step') };
+    // Type 59: Celarent syllogism
+    59: () => {
+      const [G, H, I] = getNextLetters(3);
+      const premise = `No ${H} are ${I}; all ${G} are ${H}; therefore no ${G} are ${I}`;
+      return {
+        premise,
+        logicType: 'celarent_syllogism',
+        structure: '∀x(H(x)→¬I(x))∧∀x(G(x)→H(x))⇒∀x(G(x)→¬I(x))'
+      };
     },
 
-    // 60 Augmenting path certification
-    60(){
-      const txt = sentence([`current pairing not maximum if an alternating path starts and ends unmatched`, `flip along the path to increase pairs`]);
-      return { premise:txt, signature:sig(60,'augmenting path') };
+    // Type 60: Darii syllogism
+    60: () => {
+      const [J, K, L] = getNextLetters(3);
+      const premise = `All ${K} are ${L}; some ${J} are ${K}; therefore some ${J} are ${L}`;
+      return {
+        premise,
+        logicType: 'darii_syllogism',
+        structure: '∀x(K(x)→L(x))∧∃x(J(x)∧K(x))⇒∃x(J(x)∧L(x))'
+      };
     },
 
-    // 61 Extremal element method
-    61(){
-      const [P] = pickLetters(1);
-      const txt = sentence([`choose arrangement with smallest cost under rule ${P}`, `any violation allows a cheaper fix`, `therefore the arrangement satisfies all rules`]);
-      return { premise:txt, signature:sig(61,'extremal argument') };
+    // Type 61: Exchange argument improvement
+    61: () => {
+      const [M, N] = getNextLetters(2);
+      const premise = `Choose ${M} minimal under criterion P; if component X can be swapped for Y to improve, contradiction; therefore ${M} is optimal`;
+      return {
+        premise,
+        logicType: 'exchange_argument',
+        structure: 'minimal(M,P)∧(swap→better)⇒⊥∴optimal(M)'
+      };
     },
 
-    // 62 Bijection and inversion
-    62(){
-      const txt = sentence([`mapping is one‑to‑one and onto between two sets`, `build the inverse`, `test injective and surjective parts`, `composition recovers inputs uniquely`]);
-      return { premise:txt, signature:sig(62,'bijection inverse') };
-    },
+    // Type 62: Bijection and inversion
+    62: () => {
+      const [O, P] = getNextLetters(2);
+      const premise = `Mapping from ${O} to ${P} is one-to-one and onto; therefore inverse mapping from ${P} to ${O} exists uniquely`;
+      return {
+        premise,
+        logicType: 'bijection_inversion',
+        structure: 'bijection(O→P)⇒∃!inverse(P→O)'
+      };
+    }
   };
 
-  const TYPE_IDS = Object.keys(G).map(Number);
-
-  // ---------- session engine ----------
+  // Session state
   const state = {
-    n:1, sec:8, trials:40, matchRate:0.30,
-    running:false, i:0, score:0, hits:0, resp:0, omissions:0,
-    schedule:[], // booleans marking whether each index should match n back
-    history:[], // {premise, signature}
-    guard:new Set(),
-    timer:null,
+    n: 2,
+    secondsPerTrial: 10,
+    premisesPerTrial: 1,
+    trials: 30,
+    matchRate: 0.25,
+    running: false,
+    currentTrial: 0,
+    score: 0,
+    hits: 0,
+    misses: 0,
+    responses: 0,
+    omissions: 0,
+    schedule: [],
+    history: [],
+    timer: null,
+    timerBar: null
   };
 
-  function createUniqueItem(typeId, maskOverride = null){
-    for(let attempt = 0; attempt < 512; attempt++){
-      const obj = G[typeId]();
-      obj.typeId = typeId;
-      if(maskOverride !== null){
-        obj.signature = sig(typeId, maskOverride);
+  // Generate unique premise
+  function generateUniquePremise(typeId = null) {
+    const maxAttempts = 100;
+    for(let i = 0; i < maxAttempts; i++) {
+      const id = typeId || rand(1, 62);
+      const generator = reasoningGenerators[id];
+      if(!generator) continue;
+      
+      const result = generator();
+      result.typeId = id;
+      
+      // Ensure uniqueness
+      if(!usedPremises.has(result.premise)) {
+        usedPremises.add(result.premise);
+        return result;
       }
-      if(!state.guard.has(obj.premise)){
-        state.guard.add(obj.premise);
-        return obj;
+    }
+    // Fallback with timestamp
+    const id = typeId || rand(1, 62);
+    const result = reasoningGenerators[id]();
+    result.typeId = id;
+    result.premise += ` [${Date.now()}]`;
+    usedPremises.add(result.premise);
+    return result;
+  }
+
+  // Generate multiple premises for a trial
+  function generateTrialPremises(count, matchData = null) {
+    const premises = [];
+    
+    if(matchData) {
+      // Generate matching logical structures
+      for(let i = 0; i < count; i++) {
+        const typeId = matchData[i % matchData.length].typeId;
+        premises.push(generateUniquePremise(typeId));
+      }
+    } else {
+      // Generate random premises
+      for(let i = 0; i < count; i++) {
+        premises.push(generateUniquePremise());
       }
     }
+    
+    return premises;
+  }
 
-    // Pathological fallback: force uniqueness while preserving metadata
-    const fallback = G[typeId]();
-    fallback.typeId = typeId;
-    if(maskOverride !== null){
-      fallback.signature = sig(typeId, maskOverride);
+  // Build match schedule
+  function buildSchedule(n, trials, matchRate) {
+    const schedule = new Array(trials).fill(false);
+    for(let i = n; i < trials; i++) {
+      schedule[i] = Math.random() < matchRate;
     }
-    fallback.premise += ' Again-' + Math.random().toString(36).slice(2,6);
-    state.guard.add(fallback.premise);
-    return fallback;
+    return schedule;
   }
 
-  // schedule matches stochastically while respecting n spacing
-  function buildSchedule(n,trials,p){
-    const s = Array(trials).fill(false);
-    for(let t=n; t<trials; t++){
-      s[t] = Math.random() < p;
-    }
-    return s;
-  }
-
-  function nextPremise(){
-    // choose a type id uniformly at random
-    const typeId = choice(TYPE_IDS);
-    return createUniqueItem(typeId);
-  }
-
-  function makeMatchFrom(historyItem){
-    // For matching we reuse the same signature mask and regenerate a fresh sentence of the same type.
-    // This keeps matching logical, not textual.
-    const typeId = historyItem.typeId;
-    const mask = historyItem.signature.split('|')[1];
-    return createUniqueItem(typeId, mask);
-  }
-
-  function updateKPI(){
-    $('#kTrial').textContent = state.i;
+  // Update UI statistics
+  function updateStats() {
+    $('#kTrial').textContent = state.currentTrial;
     $('#kScore').textContent = state.score;
-    $('#kAcc').textContent = state.resp? Math.round(100*state.hits/state.resp)+'%':'—';
-    $('#kMiss').textContent = state.omissions;
-    $('#kSched').textContent = state.schedule.filter(Boolean).length;
+    $('#kHits').textContent = state.hits;
+    $('#kMisses').textContent = state.misses;
+    $('#kOmit').textContent = state.omissions;
+    
+    const accuracy = state.responses > 0 
+      ? Math.round(100 * state.hits / state.responses) + '%' 
+      : '—';
+    $('#kAcc').textContent = accuracy;
   }
 
-  function logLine(txt){
-    const el = $('#log');
-    el.innerHTML = `<div>${new Date().toLocaleTimeString()} · ${txt}</div>` + el.innerHTML;
-  }
-
-  function present(){
-    try{
-      if(!state.running) return;
-      if(state.i >= state.trials){ stopSession(); return }
-
-      const shouldMatch = state.schedule[state.i];
-
-      let item;
-      if(shouldMatch && state.i >= state.n){
-        item = makeMatchFrom(state.history[state.i - state.n]);
-      } else {
-        item = nextPremise();
-      }
-
-      state.history.push(item);
-      $('#premise').textContent = 'Premise: ' + item.premise;
-      $('#status').textContent  = `Type ${item.typeId} · n-back ${state.n}`;
-      $('#btnMatch').disabled = false; $('#btnNoMatch').disabled = false;
-
-      clearTimeout(state.timer);
-      state.timer = setTimeout(()=>{
-        // omission
-        state.omissions++; state.resp++;
-        const expectMatch = state.schedule[state.i];
-        $('#status').textContent = expectMatch ? 'Time up · expected MATCH' : 'Time up · expected NO MATCH';
-        state.i++; updateKPI(); present();
-      }, state.sec*1000);
-    } catch(err){
-      console.error('present() error:', err);
-      const msg = 'ERROR: ' + (err && err.message ? err.message : String(err));
-      $('#status').textContent = msg;
-      logLine(msg);
-      stopSession();
+  // Add log entry
+  function addLog(message) {
+    const log = $('#log');
+    const time = new Date().toLocaleTimeString();
+    const entry = document.createElement('div');
+    entry.textContent = `[${time}] ${message}`;
+    log.insertBefore(entry, log.firstChild);
+    
+    // Keep log size manageable
+    while(log.children.length > 50) {
+      log.removeChild(log.lastChild);
     }
   }
 
-  function judge(isMatch){
+  // Present trial
+  function presentTrial() {
     if(!state.running) return;
-    clearTimeout(state.timer);
-    const expectMatch = state.schedule[state.i];
-    const correct = (isMatch === expectMatch);
-    state.resp++;
-    if(correct){ state.score+=1; state.hits+=1; $('#status').textContent = 'Correct' }
-    else { state.score-=1; $('#status').textContent = 'Incorrect' }
-    state.i++; updateKPI(); present();
-  }
-
-  function startSession(){
-    try{
-      state.running = true;
-      state.i=0; state.score=0; state.hits=0; state.resp=0; state.omissions=0; state.history=[]; state.guard.clear();
-      state.schedule = buildSchedule(state.n, state.trials, state.matchRate);
-      $('#btnMatch').disabled = true; $('#btnNoMatch').disabled = true;
-      $('#status').textContent = 'Running…'; $('#premise').textContent = '—';
-      present();
-      $('#start').disabled = true; $('#stop').disabled = false;
-    } catch(err){
-      console.error('startSession() error:', err);
-      const errMsg = err && err.message ? err.message : String(err);
-      $('#status').textContent = 'ERROR starting: ' + errMsg;
-      logLine('ERROR start: ' + errMsg);
-      state.running = false;
-      $('#start').disabled = false; $('#stop').disabled = true;
+    
+    if(state.currentTrial >= state.trials) {
+      stopSession();
+      return;
     }
-  }
-  function stopSession(){ state.running=false; clearTimeout(state.timer); $('#status').textContent='Stopped.'; $('#btnMatch').disabled=true; $('#btnNoMatch').disabled=true; $('#start').disabled=false; $('#stop').disabled=true }
 
-  // ---------- wire UI ----------
-  const nR = $('#nback'), nV = $('#nbackV'); nR.addEventListener('input', e=>{ state.n = +e.target.value; nV.textContent = state.n })
-  const sR = $('#sec'), sV = $('#secV'), sN=$('#secNum');
-  function syncSec(v){ state.sec=+v; sV.textContent=v; sR.value=v; sN.value=v }
-  sR.addEventListener('input',e=>syncSec(e.target.value)); sN.addEventListener('input',e=>syncSec(e.target.value));
-  const tR=$('#trials'), tV=$('#trialsV'), tN=$('#trialsNum');
-  function syncTrials(v){ state.trials=+v; tV.textContent=v; tR.value=v; tN.value=v }
-  tR.addEventListener('input',e=>syncTrials(e.target.value)); tN.addEventListener('input',e=>syncTrials(e.target.value));
-  const mR=$('#matchRate'), mV=$('#matchRateV'); mR.addEventListener('input',e=>{ state.matchRate=+e.target.value/100; mV.textContent=e.target.value })
+    const shouldMatch = state.schedule[state.currentTrial];
+    let trialData;
+    
+    if(shouldMatch && state.currentTrial >= state.n) {
+      // Generate matching premises based on n-back logical structure
+      const matchTarget = state.history[state.currentTrial - state.n];
+      trialData = generateTrialPremises(state.premisesPerTrial, matchTarget);
+      addLog(`Trial ${state.currentTrial + 1}: N-back MATCH (types: ${trialData.map(d => d.typeId).join(',')})`);
+    } else {
+      // Generate new random premises
+      trialData = generateTrialPremises(state.premisesPerTrial);
+      addLog(`Trial ${state.currentTrial + 1}: New premises (types: ${trialData.map(d => d.typeId).join(',')})`);
+    }
+    
+    state.history.push(trialData);
+    
+    // Display premises
+    const container = $('#premiseContainer');
+    container.innerHTML = '';
+    trialData.forEach((data, index) => {
+      const div = document.createElement('div');
+      div.className = 'premise';
+      div.innerHTML = `<span class="premise-number">${index + 1}.</span>${data.premise}`;
+      container.appendChild(div);
+    });
+    
+    // Update status
+    const types = trialData.map(d => `Type ${d.typeId}`).join(', ');
+    $('#status').textContent = `Trial ${state.currentTrial + 1} of ${state.trials} • ${types} • N-back: ${state.n}`;
+    
+    // Enable response buttons
+    $('#btnMatch').disabled = false;
+    $('#btnNoMatch').disabled = false;
+    
+    // Start timer
+    startTimer();
+  }
+
+  // Timer management
+  function startTimer() {
+    clearTimeout(state.timer);
+    clearInterval(state.timerBar);
+    
+    const timerBar = $('#timerBar');
+    timerBar.style.width = '100%';
+    timerBar.style.transition = 'none';
+    
+    setTimeout(() => {
+      timerBar.style.transition = `width ${state.secondsPerTrial}s linear`;
+      timerBar.style.width = '0%';
+    }, 50);
+    
+    state.timer = setTimeout(() => {
+      handleOmission();
+    }, state.secondsPerTrial * 1000);
+  }
+
+  // Handle omission
+  function handleOmission() {
+    state.omissions++;
+    state.responses++;
+    
+    const expected = state.schedule[state.currentTrial];
+    const message = expected ? 'Time up! Expected: MATCH' : 'Time up! Expected: NO MATCH';
+    $('#status').textContent = message;
+    addLog(`Trial ${state.currentTrial + 1}: OMISSION (expected: ${expected ? 'MATCH' : 'NO MATCH'})`);
+    
+    $('#btnMatch').disabled = true;
+    $('#btnNoMatch').disabled = true;
+    
+    state.currentTrial++;
+    updateStats();
+    
+    setTimeout(() => presentTrial(), 1000);
+  }
+
+  // Handle response
+  function handleResponse(isMatch) {
+    if(!state.running) return;
+    
+    clearTimeout(state.timer);
+    $('#timerBar').style.width = '0%';
+    
+    const expected = state.schedule[state.currentTrial];
+    const correct = (isMatch === expected);
+    
+    state.responses++;
+    if(correct) {
+      state.score++;
+      state.hits++;
+      $('#status').textContent = '✓ Correct!';
+      $('#status').style.color = 'var(--ok)';
+    } else {
+      state.score--;
+      state.misses++;
+      $('#status').textContent = '✗ Incorrect';
+      $('#status').style.color = 'var(--warn)';
+    }
+    
+    addLog(`Trial ${state.currentTrial + 1}: Response: ${isMatch ? 'MATCH' : 'NO MATCH'}, Expected: ${expected ? 'MATCH' : 'NO MATCH'}, ${correct ? 'CORRECT' : 'INCORRECT'}`);
+    
+    $('#btnMatch').disabled = true;
+    $('#btnNoMatch').disabled = true;
+    
+    state.currentTrial++;
+    updateStats();
+    
+    setTimeout(() => {
+      $('#status').style.color = '';
+      presentTrial();
+    }, 1000);
+  }
+
+  // Start session
+  function startSession() {
+    // Reset state
+    state.running = true;
+    state.currentTrial = 0;
+    state.score = 0;
+    state.hits = 0;
+    state.misses = 0;
+    state.responses = 0;
+    state.omissions = 0;
+    state.history = [];
+    usedPremises.clear();
+    letterIndex = 0;
+    
+    // Build schedule
+    state.schedule = buildSchedule(state.n, state.trials, state.matchRate);
+    
+    const matchCount = state.schedule.filter(Boolean).length;
+    addLog(`Session started: ${state.trials} trials, n-back=${state.n}, ${state.premisesPerTrial} premises/trial, ${matchCount} matches scheduled`);
+    
+    // Update UI
+    $('#start').disabled = true;
+    $('#stop').disabled = false;
+    $('#btnMatch').disabled = false;
+    $('#btnNoMatch').disabled = false;
+    
+    updateStats();
+    presentTrial();
+  }
+
+  // Stop session
+  function stopSession() {
+    state.running = false;
+    clearTimeout(state.timer);
+    
+    $('#status').textContent = `Session complete! Final score: ${state.score}`;
+    $('#start').disabled = false;
+    $('#stop').disabled = true;
+    $('#btnMatch').disabled = true;
+    $('#btnNoMatch').disabled = true;
+    
+    addLog(`Session ended: Score=${state.score}, Accuracy=${state.hits}/${state.responses}, Omissions=${state.omissions}`);
+  }
+
+  // Export log
+  function exportLog() {
+    const logData = state.history.map((trial, index) => {
+      const types = trial.map(p => p.typeId).join(',');
+      const structures = trial.map(p => p.structure).join(' | ');
+      const premises = trial.map(p => p.premise).join(' || ');
+      return `${index + 1}\t${types}\t${structures}\t${premises}`;
+    });
+    
+    const header = 'Trial\tTypes\tStructures\tPremises';
+    const content = [header, ...logData].join('\n');
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `imagi-world-log-${new Date().toISOString()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Wire up controls
+  $('#nback').addEventListener('input', e => {
+    state.n = parseInt(e.target.value);
+    $('#nbackV').textContent = state.n;
+  });
+
+  $('#sec').addEventListener('input', e => {
+    state.secondsPerTrial = parseFloat(e.target.value);
+    $('#secV').textContent = state.secondsPerTrial;
+    $('#secNum').value = state.secondsPerTrial;
+  });
+
+  $('#secNum').addEventListener('input', e => {
+    state.secondsPerTrial = parseFloat(e.target.value);
+    $('#secV').textContent = state.secondsPerTrial;
+    $('#sec').value = state.secondsPerTrial;
+  });
+
+  $('#premises').addEventListener('input', e => {
+    state.premisesPerTrial = parseInt(e.target.value);
+    $('#premisesV').textContent = state.premisesPerTrial;
+    $('#premisesNum').value = state.premisesPerTrial;
+  });
+
+  $('#premisesNum').addEventListener('input', e => {
+    state.premisesPerTrial = parseInt(e.target.value);
+    $('#premisesV').textContent = state.premisesPerTrial;
+    $('#premises').value = state.premisesPerTrial;
+  });
+
+  $('#trials').addEventListener('input', e => {
+    state.trials = parseInt(e.target.value);
+    $('#trialsV').textContent = state.trials;
+    $('#trialsNum').value = state.trials;
+  });
+
+  $('#trialsNum').addEventListener('input', e => {
+    state.trials = parseInt(e.target.value);
+    $('#trialsV').textContent = state.trials;
+    $('#trials').value = state.trials;
+  });
+
+  $('#matchRate').addEventListener('input', e => {
+    state.matchRate = parseInt(e.target.value) / 100;
+    $('#matchRateV').textContent = e.target.value;
+  });
 
   $('#start').addEventListener('click', startSession);
   $('#stop').addEventListener('click', stopSession);
-  $('#reset').addEventListener('click', ()=>{ state.score=0; state.hits=0; state.resp=0; state.omissions=0; updateKPI(); $('#status').textContent='Stats reset.' })
-  $('#download').addEventListener('click', ()=>{
-    const lines = state.history.map((h,i)=>`${i}\tT${h.typeId}\t${h.signature}\t${h.premise}`);
-    const blob = new Blob([lines.join('\n')], {type:'text/plain'});
-    const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='imagi-world-2.0-log.txt'; a.click(); URL.revokeObjectURL(a.href);
-  })
+  $('#reset').addEventListener('click', () => {
+    state.score = 0;
+    state.hits = 0;
+    state.misses = 0;
+    state.responses = 0;
+    state.omissions = 0;
+    updateStats();
+    addLog('Statistics reset');
+  });
+  $('#download').addEventListener('click', exportLog);
 
-  $('#btnMatch').addEventListener('click', ()=>judge(true));
-  $('#btnNoMatch').addEventListener('click', ()=>judge(false));
-  window.addEventListener('keydown', e=>{
+  $('#btnMatch').addEventListener('click', () => handleResponse(true));
+  $('#btnNoMatch').addEventListener('click', () => handleResponse(false));
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', e => {
     if(!state.running) return;
-    if(e.code==='Space'){ e.preventDefault(); judge(true) }
-    if(e.code==='Enter'){ e.preventDefault(); judge(false) }
-  })
+    
+    if(e.code === 'ArrowLeft' || e.code === 'KeyA') {
+      e.preventDefault();
+      if(!$('#btnMatch').disabled) handleResponse(true);
+    }
+    if(e.code === 'ArrowRight' || e.code === 'KeyD') {
+      e.preventDefault();
+      if(!$('#btnNoMatch').disabled) handleResponse(false);
+    }
+  });
 
-  window.addEventListener('error', e => { logLine('Global ERROR: '+ (e.error?.message || e.message)); });
-
-  // init
-  syncSec(8); syncTrials(40); updateKPI();
+  // Initialize
+  updateStats();
+  addLog('Imagi-World 2.0 initialized with 62 reasoning types');
 })();
 </script>
 </body>
