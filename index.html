@@ -85,6 +85,22 @@
           <button id="stop" class="btn danger" disabled>STOP</button>
           <button id="reset" class="btn secondary">Reset Stats</button>
         </div>
+        <div class="control-group" id="voiceControls">
+          <h3>VOICE</h3>
+          <div class="btn-group" style="grid-template-columns:1fr 1fr">
+            <button id="previewBtn" class="btn btn-secondary" type="button">Voice Preview</button>
+            <button id="repeatBtn" class="btn btn-secondary" type="button" disabled>Repeat Audio</button>
+          </div>
+          <label>
+            Speech speed
+            <span class="value" id="speechRateVal">1.00×</span>
+          </label>
+          <div class="seed-control">
+            <input type="range" id="speechRate" min="0.5" max="2.5" step="0.1" value="1.0" class="knob-slider" />
+            <input type="number" id="speechRateNum" min="0.5" max="2.5" step="0.1" value="1.0" class="seed-input" style="max-width:90px" />
+          </div>
+          <div class="voice-info" id="voiceInfo">Initializing voice…</div>
+        </div>
         <div class="row">
           <button id="download" class="btn ghost">Export Session Log</button>
         </div>
@@ -94,7 +110,12 @@
         <div class="status" id="status">Ready to begin. Press START to generate premises.</div>
         <div class="timer-bar"><div class="timer-progress" id="timerBar"></div></div>
         <div class="premise-container" id="premiseContainer">
-          <div class="premise" id="premise">Premises will appear here...</div>
+          <div id="premiseDisplay">
+            <div class="premise" id="premise">
+              <span class="premise-number">1.</span>
+              <span class="premise-text">Premises will appear here...</span>
+            </div>
+          </div>
         </div>
         <div class="bigbtns">
           <button id="btnMatch" class="yes" disabled>MATCH</button>
@@ -132,6 +153,144 @@
       </details>
     </section>
   </div>
+
+<script>
+(function(){
+  const hasTTS = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+  const RATE_KEY = 'speechRate';
+  let rate = loadRate();
+  let lastLines = [];
+  let sessionToken = 0;
+
+  // UI elements
+  let rateSlider, rateNum, rateVal, previewBtn, repeatBtn, infoEl;
+  let bound = false;
+
+  function clamp(x,min,max){
+    const value = Number.isFinite(x) ? x : min;
+    return Math.max(min, Math.min(max, value));
+  }
+  function fmt(x){ return (Math.round(x*100)/100).toFixed(2) + '×'; }
+  function saveRate(x){ try{ localStorage.setItem(RATE_KEY, String(x)); }catch(_){}}
+  function loadRate(){
+    try{
+      const stored = parseFloat(localStorage.getItem(RATE_KEY) || '1.0');
+      return Number.isFinite(stored) ? clamp(stored, 0.5, 2.5) : 1.0;
+    }catch(_){
+      return 1.0;
+    }
+  }
+
+  function setRate(x){
+    let next = parseFloat(x);
+    if(!Number.isFinite(next)) next = 1.0;
+    rate = clamp(next, 0.5, 2.5);
+    if(rateSlider) rateSlider.value = rate;
+    if(rateNum)    rateNum.value = rate;
+    if(rateVal)    rateVal.textContent = fmt(rate);
+    saveRate(rate);
+    updateInfo();
+  }
+
+  function updateInfo(){
+    if(!infoEl) return;
+    if(!hasTTS){ infoEl.textContent = 'Voice unavailable'; return; }
+    try{
+      const voices = speechSynthesis.getVoices() || [];
+      const v = voices.find(v=>/en-|en_/.test(v.lang)) || voices[0];
+      infoEl.innerHTML = v ? `Voice: <strong>${v.name}</strong> (${v.lang}) • Rate ${fmt(rate)}` : `Voice: default • Rate ${fmt(rate)}`;
+    }catch(_){
+      infoEl.textContent = `Voice: default • Rate ${fmt(rate)}`;
+    }
+  }
+
+  function cancelAll(){
+    if(hasTTS){
+      try{ speechSynthesis.cancel(); }catch(_){ }
+    }
+    lastLines = [];
+    if(repeatBtn) repeatBtn.disabled = true;
+  }
+
+  function speakLines(lines){
+    if(!hasTTS) return;
+    cancelAll();
+    lastLines = Array.isArray(lines) ? lines.slice() : [String(lines)];
+    const myToken = ++sessionToken;
+    for(const line of lastLines){
+      const u = new SpeechSynthesisUtterance(String(line));
+      u.rate = rate;
+      u.onboundary = ()=>{ if(myToken !== sessionToken) cancelAll(); };
+      speechSynthesis.speak(u);
+    }
+    if(repeatBtn) repeatBtn.disabled = false;
+  }
+
+  function speakOnce(text){
+    if(!hasTTS) return;
+    cancelAll();
+    const myToken = ++sessionToken;
+    lastLines = [String(text)];
+    const u = new SpeechSynthesisUtterance(String(text));
+    u.rate = rate;
+    u.onboundary = ()=>{ if(myToken !== sessionToken) cancelAll(); };
+    speechSynthesis.speak(u);
+    if(repeatBtn) repeatBtn.disabled = false;
+  }
+
+  function summarizePremises(containerSelector){
+    const allNodes = Array.from(document.querySelectorAll(containerSelector));
+    const nodes = allNodes.some(el => el.classList && el.classList.contains('premise-text'))
+      ? allNodes.filter(el => el.classList && el.classList.contains('premise-text'))
+      : allNodes;
+    const cleaned = nodes
+      .map(el => (el.textContent || '').replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim())
+      .filter(Boolean);
+    return cleaned.map((t,i)=>`Item ${i+1}: ${t}.`);
+  }
+
+  function bindUI(){
+    rateSlider = document.getElementById('speechRate');
+    rateNum    = document.getElementById('speechRateNum');
+    rateVal    = document.getElementById('speechRateVal');
+    previewBtn = document.getElementById('previewBtn');
+    repeatBtn  = document.getElementById('repeatBtn');
+    infoEl     = document.getElementById('voiceInfo');
+
+    setRate(rate);
+    if(!hasTTS){
+      if(previewBtn) previewBtn.disabled = true;
+      if(repeatBtn)  repeatBtn.disabled = true;
+      updateInfo();
+      return;
+    }
+
+    if(typeof speechSynthesis !== 'undefined'){
+      speechSynthesis.onvoiceschanged = updateInfo;
+    }
+
+    if(!bound){
+      if(rateSlider) rateSlider.addEventListener('input', e=> setRate(e.target.value));
+      if(rateNum)    rateNum.addEventListener('input',  e=> setRate(e.target.value));
+      if(previewBtn) previewBtn.addEventListener('click', ()=> speakOnce('Imagi World voice preview. Rate ' + rate.toFixed(2)));
+      if(repeatBtn)  repeatBtn.addEventListener('click', ()=> { if(lastLines.length) speakLines(lastLines); });
+      bound = true;
+    }
+  }
+
+  // public API for the app
+  window.ImagiVoice = {
+    init: bindUI,
+    cancel: cancelAll,
+    speakPremiseList: (selector)=>{ const lines = summarizePremises(selector); if(lines.length) speakLines(lines); },
+    speakOnce
+  };
+
+  // init on DOM ready
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindUI);
+  else bindUI();
+})();
+</script>
 
 <script>
 (function(){
@@ -1073,14 +1232,25 @@
     state.history.push(trialData);
     
     // Display premises
-    const container = $('#premiseContainer');
+    const container = $('#premiseDisplay');
     container.innerHTML = '';
     trialData.forEach((data, index) => {
       const div = document.createElement('div');
       div.className = 'premise';
-      div.innerHTML = `<span class="premise-number">${index + 1}.</span>${data.premise}`;
+      const num = document.createElement('span');
+      num.className = 'premise-number';
+      num.textContent = `${index + 1}.`;
+      const text = document.createElement('span');
+      text.className = 'premise-text';
+      text.textContent = data.premise;
+      div.appendChild(num);
+      div.appendChild(text);
       container.appendChild(div);
     });
+
+    if (window.ImagiVoice && typeof ImagiVoice.speakPremiseList === 'function') {
+      ImagiVoice.speakPremiseList('#premiseDisplay .premise-text, #premiseDisplay');
+    }
     
     // Update status
     const types = trialData.map(d => `Type ${d.typeId}`).join(', ');
@@ -1171,6 +1341,8 @@
 
   // Start session
   function startSession() {
+    if (window.ImagiVoice && typeof ImagiVoice.init === 'function') { ImagiVoice.init(); }
+    if (window.ImagiVoice && typeof ImagiVoice.cancel === 'function') { ImagiVoice.cancel(); }
     // Reset state
     state.running = true;
     state.currentTrial = 0;
@@ -1203,7 +1375,8 @@
   function stopSession() {
     state.running = false;
     clearTimeout(state.timer);
-    
+    if (window.ImagiVoice && typeof ImagiVoice.cancel === 'function') { ImagiVoice.cancel(); }
+
     $('#status').textContent = `Session complete! Final score: ${state.score}`;
     $('#start').disabled = false;
     $('#stop').disabled = true;
