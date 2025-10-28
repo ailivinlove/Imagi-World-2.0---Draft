@@ -175,7 +175,7 @@ function extractPremiseLines(rawListOrSelector){
     // remove “1.”, “1)”, “(1)”, “#1”, “1 - ” at start
     .replace(/^\s*(?:\d+\s*[.)-]\s*|\(\d+\)\s*|#\d+\s*|\d+\.\s*)/, '')
     // strip any remaining numerals entirely for TTS safety
-    .replace(/\d+/g, '')
+    .replace(/[\d\u2070-\u2079\u2080-\u2089]+/g, '')
     .trim()
   ).filter(Boolean);
 }
@@ -235,7 +235,7 @@ function extractPremiseLines(rawListOrSelector){
     return String(text)
       .replace(/^\s*Item\s*\d+\s*[:.)-]\s*/i, '')
       .replace(/^\s*(?:\d+\s*[.)-]\s*|\(\d+\)\s*|#\d+\s*|\d+\.\s*)/, '')
-      .replace(/\d+/g, '')
+      .replace(/[\d\u2070-\u2079\u2080-\u2089]+/g, '')
       .replace(/\s+/g, ' ')
       .trim();
   }
@@ -364,17 +364,156 @@ function extractPremiseLines(rawListOrSelector){
 (function(){
   // Core utilities
   const $ = sel => document.querySelector(sel);
-  const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+
+  const DEFAULT_SEED = 12345;
+  const SEED_STORAGE_KEY = 'imagiSeed';
+  const DIGIT_STRIP = /[\d\u2070-\u2079\u2080-\u2089]+/g;
+
+  function parseSeedValue(raw) {
+    const num = parseInt(String(raw ?? ''), 10);
+    return Number.isFinite(num) ? num : null;
+  }
+
+  function readSeedFromDom() {
+    const el = document.querySelector('[data-seed]') || document.getElementById('seed');
+    if(!el) return null;
+    if('value' in el && typeof el.value !== 'undefined') {
+      return parseSeedValue(el.value);
+    }
+    if(el.dataset && 'seed' in el.dataset) {
+      return parseSeedValue(el.dataset.seed);
+    }
+    return parseSeedValue(el.textContent);
+  }
+
+  function readSeedFromQuery() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return parseSeedValue(params.get('seed'));
+    } catch(_){
+      return null;
+    }
+  }
+
+  function readSeedFromStorage() {
+    try {
+      return parseSeedValue(localStorage.getItem(SEED_STORAGE_KEY));
+    } catch(_){
+      return null;
+    }
+  }
+
+  function resolveSeed() {
+    const domSeed = readSeedFromDom();
+    if(domSeed !== null) return domSeed;
+    const querySeed = readSeedFromQuery();
+    if(querySeed !== null) return querySeed;
+    const storedSeed = readSeedFromStorage();
+    if(storedSeed !== null) return storedSeed;
+    return DEFAULT_SEED;
+  }
+
+  function persistSeed(seed) {
+    try {
+      localStorage.setItem(SEED_STORAGE_KEY, String(seed));
+    } catch(_){ }
+  }
+
+  function splitmix32(seed) {
+    let state = (seed | 0) >>> 0;
+    return function() {
+      state = (state + 0x9e3779b9) >>> 0;
+      let t = state;
+      t ^= t >>> 16;
+      t = Math.imul(t, 0x21f0aaad) >>> 0;
+      t ^= t >>> 15;
+      t = Math.imul(t, 0x735a2d97) >>> 0;
+      t ^= t >>> 15;
+      return (t >>> 0) / 4294967296;
+    };
+  }
+
+  let rng = null;
+
+  function reseed(seed){
+    rng = splitmix32(seed);
+  }
+
+  function random(){
+    if(!rng) reseed(resolveSeed());
+    return rng();
+  }
+
+  const rand = (a, b) => Math.floor(random() * (b - a + 1)) + a;
   const choice = arr => arr[rand(0, arr.length - 1)];
   const shuffle = arr => {
     const copy = [...arr];
     for(let i = copy.length - 1; i > 0; i--) {
-      const j = rand(0, i);
+      const j = Math.floor(random() * (i + 1));
       [copy[i], copy[j]] = [copy[j], copy[i]];
     }
     return copy;
   };
   const sample = (arr, k) => shuffle([...arr]).slice(0, k);
+
+  function enforceWordLimit(text, limit = 7) {
+    const normalized = String(text || '')
+      .replace(DIGIT_STRIP, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if(!normalized) return '';
+    const words = normalized.split(' ').filter(Boolean);
+    return words.slice(0, limit).join(' ');
+  }
+
+  function structureToPremise(structure) {
+    if(!structure) return '';
+    const simplified = String(structure)
+      .replace(/[()]/g, '')
+      .replace(/∧/g, '; ')
+      .replace(/⇒/g, ' ⇒ ')
+      .replace(/⊢/g, ' ⊢ ')
+      .replace(/∴/g, ' ∴ ')
+      .replace(/≡/g, ' ≡ ')
+      .replace(/↔/g, ' ↔ ')
+      .replace(/∪/g, '∪')
+      .replace(/∩/g, '∩')
+      .replace(/→/g, '→')
+      .replace(/∨/g, '∨')
+      .replace(/¬/g, '¬')
+      .replace(/≥/g, '≥')
+      .replace(/≤/g, '≤')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return enforceWordLimit(simplified);
+  }
+
+  function fallbackPremise(text) {
+    if(!text) return '';
+    const cleaned = String(text)
+      .replace(/[;:,]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return enforceWordLimit(cleaned);
+  }
+
+  function alphaLabel(n) {
+    const letters = 'abcdefghijklmnopqrstuvwxyz';
+    let value = Math.max(0, n);
+    let out = '';
+    do {
+      out = letters[value % 26] + out;
+      value = Math.floor(value / 26) - 1;
+    } while(value >= 0);
+    return out || 'a';
+  }
+
+  function formatPremise(result) {
+    const fromStructure = structureToPremise(result && result.structure);
+    if(fromStructure) return fromStructure;
+    const fallback = fallbackPremise(result && result.premise);
+    return fallback || 'logic ' + alphaLabel(result ? result.typeId || 0 : 0);
+  }
 
   // Premise generation helpers
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -1188,7 +1327,9 @@ function extractPremiseLines(rawListOrSelector){
     schedule: [],
     history: [],
     timer: null,
-    timerBar: null
+    timerBar: null,
+    seed: resolveSeed(),
+    uniqueNonce: 0
   };
 
   // Generate unique premise
@@ -1198,23 +1339,30 @@ function extractPremiseLines(rawListOrSelector){
       const id = typeId || rand(1, 62);
       const generator = reasoningGenerators[id];
       if(!generator) continue;
-      
+
       const result = generator();
       result.typeId = id;
-      
-      // Ensure uniqueness
-      if(!usedPremises.has(result.premise)) {
-        usedPremises.add(result.premise);
+      result.premise = formatPremise(result);
+      if(!result.premise) continue;
+
+      const key = `${id}::${result.premise}`;
+      if(!usedPremises.has(key)) {
+        usedPremises.add(key);
         return result;
       }
     }
-    // Fallback with timestamp
-    const id = typeId || rand(1, 62);
-    const result = reasoningGenerators[id]();
-    result.typeId = id;
-    result.premise += ` [${Date.now()}]`;
-    usedPremises.add(result.premise);
-    return result;
+
+    const fallbackId = typeId || rand(1, 62);
+    const fallbackGenerator = reasoningGenerators[fallbackId];
+    const fallbackResult = fallbackGenerator ? fallbackGenerator() : { premise: '', structure: '', typeId: fallbackId };
+    fallbackResult.typeId = fallbackId;
+    const suffix = alphaLabel(state.uniqueNonce++);
+    const baseText = formatPremise(fallbackResult);
+    const finalText = enforceWordLimit(`${baseText} ${suffix}`);
+    fallbackResult.premise = finalText || enforceWordLimit(`logic ${suffix || alphaLabel(fallbackId)}`);
+    const fallbackKey = `${fallbackId}::${fallbackResult.premise}`;
+    usedPremises.add(fallbackKey);
+    return fallbackResult;
   }
 
   // Generate multiple premises for a trial
@@ -1241,7 +1389,7 @@ function extractPremiseLines(rawListOrSelector){
   function buildSchedule(n, trials, matchRate) {
     const schedule = new Array(trials).fill(false);
     for(let i = n; i < trials; i++) {
-      schedule[i] = Math.random() < matchRate;
+      schedule[i] = random() < matchRate;
     }
     return schedule;
   }
@@ -1425,10 +1573,14 @@ function extractPremiseLines(rawListOrSelector){
     state.history = [];
     usedPremises.clear();
     letterIndex = 0;
-    
+    state.seed = resolveSeed();
+    persistSeed(state.seed);
+    reseed(state.seed);
+    state.uniqueNonce = 0;
+
     // Build schedule
     state.schedule = buildSchedule(state.n, state.trials, state.matchRate);
-    
+
     const matchCount = state.schedule.filter(Boolean).length;
     addLog(`Session started: ${state.trials} trials, n-back=${state.n}, ${state.premisesPerTrial} premises/trial, ${matchCount} matches scheduled`);
     
