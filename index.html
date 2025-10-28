@@ -314,7 +314,7 @@ function extractPremiseLines(rawListOrSelector){
     if(!bound){
       if(rateSlider) rateSlider.addEventListener('input', e=> setRate(e.target.value));
       if(rateNum)    rateNum.addEventListener('input',  e=> setRate(e.target.value));
-      if(previewBtn) previewBtn.addEventListener('click', ()=> speakOnce('Imagi World voice preview. Rate ' + rate.toFixed(2)));
+      if(previewBtn) previewBtn.addEventListener('click', ()=> speakOnce('Imagi World voice preview at current pace'));
       if(repeatBtn)  repeatBtn.addEventListener('click', ()=> {
         if(typeof engine.repeat === 'function'){
           engine.repeat();
