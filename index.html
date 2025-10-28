@@ -155,6 +155,19 @@
   </div>
 
 <script>
+function extractPremiseLines(rawListOrSelector){
+  let texts;
+  if (Array.isArray(rawListOrSelector)) {
+    texts = rawListOrSelector.slice();
+  } else {
+    const sel = rawListOrSelector || '#premiseDisplay .premise-text, #premise-display .premise-text, #premiseDisplay, #premise-display';
+    texts = Array.from(document.querySelectorAll(sel))
+      .map(el => (el.textContent || '').trim())
+      .filter(Boolean);
+  }
+  return texts.map(s => s.replace(/\s+/g, ' ').trim());
+}
+
 (function(){
   const hasTTS = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
   const RATE_KEY = 'speechRate';
@@ -165,6 +178,9 @@
   // UI elements
   let rateSlider, rateNum, rateVal, previewBtn, repeatBtn, infoEl;
   let bound = false;
+
+  const engine = window.ImagiVoice = window.ImagiVoice || {};
+  engine._lastLines = engine._lastLines || [];
 
   function clamp(x,min,max){
     const value = Number.isFinite(x) ? x : min;
@@ -209,16 +225,19 @@
       try{ speechSynthesis.cancel(); }catch(_){ }
     }
     lastLines = [];
+    engine._lastLines = [];
     if(repeatBtn) repeatBtn.disabled = true;
   }
 
   function speakLines(lines){
-    if(!hasTTS) return;
-    cancelAll();
-    lastLines = Array.isArray(lines) ? lines.slice() : [String(lines)];
+    if(!hasTTS || !Array.isArray(lines) || !lines.length) return;
+    try{ speechSynthesis.cancel(); }catch(_){ }
+    const normalized = lines.map(line => String(line));
+    lastLines = normalized.slice();
+    engine._lastLines = normalized.slice();
     const myToken = ++sessionToken;
-    for(const line of lastLines){
-      const u = new SpeechSynthesisUtterance(String(line));
+    for(const line of normalized){
+      const u = new SpeechSynthesisUtterance(line);
       u.rate = rate;
       u.onboundary = ()=>{ if(myToken !== sessionToken) cancelAll(); };
       speechSynthesis.speak(u);
@@ -228,25 +247,16 @@
 
   function speakOnce(text){
     if(!hasTTS) return;
-    cancelAll();
+    try{ speechSynthesis.cancel(); }catch(_){ }
     const myToken = ++sessionToken;
-    lastLines = [String(text)];
-    const u = new SpeechSynthesisUtterance(String(text));
+    const spoken = String(text);
+    lastLines = [spoken];
+    engine._lastLines = [spoken];
+    const u = new SpeechSynthesisUtterance(spoken);
     u.rate = rate;
     u.onboundary = ()=>{ if(myToken !== sessionToken) cancelAll(); };
     speechSynthesis.speak(u);
     if(repeatBtn) repeatBtn.disabled = false;
-  }
-
-  function summarizePremises(containerSelector){
-    const allNodes = Array.from(document.querySelectorAll(containerSelector));
-    const nodes = allNodes.some(el => el.classList && el.classList.contains('premise-text'))
-      ? allNodes.filter(el => el.classList && el.classList.contains('premise-text'))
-      : allNodes;
-    const cleaned = nodes
-      .map(el => (el.textContent || '').replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim())
-      .filter(Boolean);
-    return cleaned.map((t,i)=>`Item ${i+1}: ${t}.`);
   }
 
   function bindUI(){
@@ -273,18 +283,44 @@
       if(rateSlider) rateSlider.addEventListener('input', e=> setRate(e.target.value));
       if(rateNum)    rateNum.addEventListener('input',  e=> setRate(e.target.value));
       if(previewBtn) previewBtn.addEventListener('click', ()=> speakOnce('Imagi World voice preview. Rate ' + rate.toFixed(2)));
-      if(repeatBtn)  repeatBtn.addEventListener('click', ()=> { if(lastLines.length) speakLines(lastLines); });
+      if(repeatBtn)  repeatBtn.addEventListener('click', ()=> {
+        if(typeof engine.repeat === 'function'){
+          engine.repeat();
+        }
+      });
       bound = true;
     }
   }
 
   // public API for the app
-  window.ImagiVoice = {
-    init: bindUI,
-    cancel: cancelAll,
-    speakPremiseList: (selector)=>{ const lines = summarizePremises(selector); if(lines.length) speakLines(lines); },
-    speakOnce
+  engine.init = bindUI;
+  engine.cancel = cancelAll;
+  engine.getRate = ()=>rate;
+  engine._setLastLines = function(lines){
+    if(Array.isArray(lines)){
+      lastLines = lines.slice();
+      engine._lastLines = lines.slice();
+    } else {
+      lastLines = [];
+      engine._lastLines = [];
+    }
   };
+  engine.speakPremises = function(linesOrSelector){
+    const lines = Array.isArray(linesOrSelector)
+      ? linesOrSelector
+      : extractPremiseLines(linesOrSelector);
+    if(lines.length) speakLines(lines);
+  };
+  engine.speakPremiseList = function(linesOrSelector){
+    const lines = Array.isArray(linesOrSelector)
+      ? linesOrSelector
+      : extractPremiseLines(linesOrSelector);
+    if(lines.length) speakLines(lines);
+  };
+  engine.repeat = function(){
+    if(lastLines.length) speakLines(lastLines);
+  };
+  engine.speakOnce = speakOnce;
 
   // init on DOM ready
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindUI);
@@ -1249,7 +1285,10 @@
     });
 
     if (window.ImagiVoice && typeof ImagiVoice.speakPremiseList === 'function') {
-      ImagiVoice.speakPremiseList('#premiseDisplay .premise-text, #premiseDisplay');
+      const lines = extractPremiseLines('#premiseDisplay .premise-text, #premiseDisplay');
+      console.debug('TTS lines =', lines);
+      console.assert(!lines.some(s=>/^Item\s*\d+/i.test(s)), 'Numbered lines detected in TTS payload');
+      ImagiVoice.speakPremiseList(lines);
     }
     
     // Update status
